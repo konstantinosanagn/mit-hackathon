@@ -5,10 +5,9 @@ import { ChatMessage as ChatMessageType } from '@/types/app';
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  index: number;
 }
 
-const ChatMessage = memo(({ message, index }: ChatMessageProps) => {
+const ChatMessage = memo(({ message }: ChatMessageProps) => {
   // Check if this message is from a successful generation
   const isGenerationComplete =
     message.content.includes('Successfully recreated') ||

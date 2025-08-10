@@ -1,8 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { appConfig } from '@/config/app.config';
+import TextInputModal from '@/components/projects/TextInputModal';
+import ProjectsList from '@/components/projects/ProjectsList';
+import { createProject } from '@/lib/backendApi';
 
 interface HomeScreenProps {
   showHomeScreen: boolean;
@@ -11,7 +15,7 @@ interface HomeScreenProps {
   homeContextInput: string;
   aiModel: string;
   onClose: () => void;
-  onNewProjectClick: () => void;
+  onNewProjectClick?: () => void;
   onModelChange: (model: string) => void;
 }
 
@@ -22,11 +26,26 @@ export default function HomeScreen({
   // homeContextInput,
   aiModel,
   onClose,
-  onNewProjectClick,
   onModelChange,
 }: HomeScreenProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Local modal state
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleNewProjectClickInternal = () => {
+    setModalOpen(true);
+  };
+
+  const handleCreateProject = async (name: string) => {
+    await createProject(name);
+    setModalOpen(false);
+    // Open workspace after creation
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('project', name);
+    router.push(`/workspace?${params.toString()}`);
+  };
 
   if (!showHomeScreen) return null;
 
@@ -35,7 +54,7 @@ export default function HomeScreen({
       className={`fixed inset-0 z-50 transition-opacity duration-500 ${homeScreenFading ? 'opacity-0' : 'opacity-100'}`}
     >
       {/* Simple Sun Gradient Background */}
-      <div className="absolute inset-0 bg-white overflow-hidden">
+      <div className="absolute inset-0 bg-white overflow-hidden pointer-events-none">
         {/* Main Sun - Pulsing */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-blue-900/70 via-blue-700/50 to-transparent rounded-full blur-[80px] animate-[sunPulse_4s_ease-in-out_infinite]" />
 
@@ -135,8 +154,10 @@ export default function HomeScreen({
             <div className="w-full relative group">
               <button
                 type="button"
-                onClick={onNewProjectClick}
-                className="h-[3.25rem] w-full flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-blue-500 focus-visible:ring-2 rounded-[18px] text-sm text-[#36322F] px-4 border-[.75px] border-border bg-white hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+
+                onClick={handleNewProjectClickInternal}
+                className="h-[3.25rem] w-full flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-orange-500 focus-visible:ring-2 rounded-[18px] text-sm text-[#36322F] px-4 border-[.75px] border-border bg-white hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+
                 style={{
                   boxShadow:
                     '0 0 0 1px #e3e1de66, 0 1px 2px #5f4a2e14, 0 4px 6px #5f4a2e0a, 0 40px 40px -24px #684b2514',
@@ -188,6 +209,20 @@ export default function HomeScreen({
           </div>
         </div>
       </div>
+
+      {/* Projects list */}
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-10 w-full max-w-md z-20">
+        <ProjectsList onProjectOpened={() => {}} />
+      </div>
+
+      {/* New project modal */}
+      <TextInputModal
+        title="Create New Project"
+        placeholder="my-awesome-app"
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleCreateProject}
+      />
     </div>
   );
 }

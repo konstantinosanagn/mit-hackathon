@@ -26,7 +26,7 @@ export default function PreviewTabs({
                 ? 'bg-black text-white'
                 : 'text-gray-300 hover:text-white hover:bg-gray-700'
             }`}
-            title="Code"
+            title="Code Generation"
           >
             <svg
               className="w-4 h-4"
@@ -39,6 +39,29 @@ export default function PreviewTabs({
                 strokeLinejoin="round"
                 strokeWidth={2}
                 d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={() => onTabChange('code')}
+            className={`p-2 rounded-md transition-all ${
+              activeTab === 'code'
+                ? 'bg-black text-white'
+                : 'text-gray-300 hover:text-white hover:bg-gray-700'
+            }`}
+            title="Code View"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
           </button>

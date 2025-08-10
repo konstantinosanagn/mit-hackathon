@@ -1,6 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import { getAvailableModels, AvailableModel } from '@/lib/aiApi';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ConversationContext, SandboxStatus } from '@/types/app';
 import { useNetworkStatus } from '@/lib/network';
@@ -8,34 +10,50 @@ import StatusBar from './StatusBar';
 import CreateSandboxButton from './CreateSandboxButton';
 
 interface HeaderProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
   aiModel: string;
+  setAiModel: (model: string) => void;
   status: SandboxStatus;
   sandboxData: any;
-  conversationContext: ConversationContext;
-  onModelChange: (model: string) => void;
-  onCreateSandbox: () => void;
-  onReapplyLastGeneration: () => void;
-  onDownloadZip: () => void;
-  onRefreshStatus?: () => void;
+  onRefreshSandbox: () => void;
+  onToggleTerminal?: () => void;
 }
 
 export default function Header({
+  activeTab,
+  setActiveTab,
   aiModel,
+  setAiModel,
   status,
   sandboxData,
-  conversationContext,
-  onModelChange,
-  onCreateSandbox,
-  onReapplyLastGeneration,
-  onDownloadZip,
-  onRefreshStatus,
+  onRefreshSandbox,
+  onToggleTerminal,
 }: HeaderProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const networkStatus = useNetworkStatus();
+  const [modelOptions, setModelOptions] = useState<AvailableModel[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const models = await getAvailableModels();
+        setModelOptions(models);
+      } catch (e) {
+        console.warn('[Header] Failed to fetch models', e);
+        // Fallback defaults
+        setModelOptions([
+          { label: 'Kimi K2 Instruct', provider: 'moonshotai', model_id: 'moonshotai/kimi-k2-instruct' },
+          { label: 'GPT-5', provider: 'openai', model_id: 'openai/gpt-5' },
+          { label: 'Sonnet 4', provider: 'anthropic', model_id: 'anthropic/claude-sonnet-4-20250514' },
+        ]);
+      }
+    })();
+  }, []);
 
   const handleModelChange = (model: string) => {
-    onModelChange(model);
+    setAiModel(model);
     const params = new URLSearchParams(searchParams);
     params.set('model', model);
     if (sandboxData?.sandboxId) {
@@ -79,6 +97,17 @@ export default function Header({
                   </div>
 
       <div className="flex items-center gap-2">
+        {/* Terminal Button */}
+        {onToggleTerminal && (
+          <button
+            onClick={onToggleTerminal}
+            className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-[10px] transition-colors flex items-center gap-2"
+            title="Toggle Terminal"
+          >
+            💻 Terminal
+          </button>
+        )}
+
         {/* Model Selector */}
         <select
           value={aiModel}
@@ -86,70 +115,15 @@ export default function Header({
           className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#36322F] focus:border-transparent"
           disabled={!networkStatus.isOnline}
         >
-          <option value="gpt-4o">GPT-4o</option>
-          <option value="gpt-4o-mini">GPT-4o Mini</option>
-          <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
-          <option value="claude-3-haiku">Claude 3 Haiku</option>
+          {modelOptions.map(m => (
+            <option key={m.model_id} value={m.model_id}>
+              {m.label}
+            </option>
+          ))}
         </select>
 
-        <CreateSandboxButton
-          onClick={onCreateSandbox}
-          disabled={!networkStatus.isOnline || status.type === 'creating'}
-          isCreating={status.type === 'creating'}
-        />
-
-        <Button
-          variant="code"
-          onClick={onReapplyLastGeneration}
-          size="sm"
-          title="Re-apply last generation"
-          disabled={
-            !conversationContext.lastGeneratedCode ||
-            !sandboxData ||
-            !networkStatus.isOnline ||
-            status.type !== 'active'
-          }
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-        </Button>
-
-        <button
-          onClick={onDownloadZip}
-          disabled={
-            !sandboxData || !networkStatus.isOnline || status.type !== 'active'
-          }
-          className="p-2 text-black hover:text-gray-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Download your Vite app as ZIP"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-            />
-          </svg>
-        </button>
-
         {/* Status Bar Component */}
-        <StatusBar status={status} onRefreshStatus={onRefreshStatus} />
+        <StatusBar status={status} onRefreshStatus={onRefreshSandbox} />
       </div>
     </div>
   );

@@ -53,7 +53,7 @@ export interface CodeApplicationState {
   filesGenerated?: string[];
 }
 
-export type ActiveTab = 'generation' | 'preview';
+export type ActiveTab = 'generation' | 'code' | 'preview';
 export type LoadingStage = 'gathering' | 'planning' | 'generating' | null;
 
 export interface SandboxStatus {

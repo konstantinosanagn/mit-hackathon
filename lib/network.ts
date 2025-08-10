@@ -1,4 +1,5 @@
 import React from 'react';
+import { buildApiUrl, backendFetch } from './backend';
 
 // Network utilities for better error handling and connectivity monitoring
 
@@ -85,7 +86,7 @@ class NetworkMonitor {
         }
       }, 5000);
 
-      const response = await fetch('/api/sandbox-status', {
+      const response = await backendFetch('/api/sandbox/status', {
         method: 'HEAD',
         signal: controller.signal,
         cache: 'no-cache',
@@ -146,7 +147,7 @@ export async function fetchWithRetry(
         }, 30000);
       }
 
-      const response = await fetch(url, {
+      const response = await fetch(buildApiUrl(url), {
         ...options,
         signal: controller.signal,
         headers: {
@@ -227,7 +228,7 @@ export async function apiCall<T>(
 
   try {
     const response = await fetchWithRetry(
-      endpoint,
+      buildApiUrl(endpoint),
       options,
       retryConfig?.maxRetries || 3,
       retryConfig?.retryDelay || 1000

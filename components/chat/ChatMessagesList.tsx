@@ -1,6 +1,6 @@
 'use client';
 
-import { ChatMessage as ChatMessageType, ConversationContext } from '@/types/app';
+import { ChatMessage as ChatMessageType } from '@/types/app';
 import { appConfig } from '@/config/app.config';
 import ChatMessage from './ChatMessage';
 

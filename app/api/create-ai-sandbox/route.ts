@@ -51,7 +51,7 @@ async function performHealthCheck(
       clearTimeout(timeoutId);
       throw fetchError;
     }
-  } catch {
+  } catch (error) {
     return {
       healthy: false,
       details: {
@@ -442,7 +442,7 @@ print('✓ Tailwind CSS should be loaded')
       url: `https://${host}`,
       message: 'Sandbox created and Vite React app initialized',
     });
-  } catch {
+  } catch (error) {
     console.error('[create-ai-sandbox] Error:', error);
 
     // Clean up on error

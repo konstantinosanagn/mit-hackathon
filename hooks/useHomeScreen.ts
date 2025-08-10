@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LoadingStage } from '@/types/app';
+import { scrapeWebsite } from '@/lib/aiApi';
 
 export function useHomeScreen() {
   const [showHomeScreen, setShowHomeScreen] = useState(true);
@@ -36,13 +37,9 @@ export function useHomeScreen() {
     setIsCapturingScreenshot(true);
     setScreenshotError(null);
     try {
-      const response = await fetch('/api/scrape-screenshot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
-
+      const response = await scrapeWebsite({ url });
       const data = await response.json();
+      
       if (data.success && data.screenshot) {
         setUrlScreenshot(data.screenshot);
         // Set preparing design state
