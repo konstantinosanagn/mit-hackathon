@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useSandbox } from '@/hooks/useSandbox';
 import { useChat } from '@/hooks/useChat';
 import { useCodeGeneration } from '@/hooks/useCodeGeneration';
@@ -77,6 +77,11 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const chatData = useChat();
   const codeGenerationData = useCodeGeneration();
   const homeScreenData = useHomeScreen();
+
+  // Debug logging to see if status is being updated
+  useEffect(() => {
+    console.log('[WorkspaceProvider] Sandbox status updated:', sandboxData.status);
+  }, [sandboxData.status]);
 
   const contextValue: WorkspaceContextType = {
     // Sandbox state

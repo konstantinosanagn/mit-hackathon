@@ -618,17 +618,20 @@ Focus on the key sections and content, making it clean and modern while preservi
 
   // Memoized component props
   const headerProps = useMemo(
-    () => ({
-      aiModel,
-      status: workspace.status,
-      sandboxData: workspace.sandboxData,
-      conversationContext: workspace.conversationContext,
-      onModelChange: handleModelChange,
-      onCreateSandbox: () => workspace.createSandbox(),
-      onReapplyLastGeneration: handleReapplyLastGeneration,
-      onDownloadZip: handleDownloadZip,
-      onRefreshStatus: workspace.checkSandboxStatus,
-    }),
+    () => {
+      console.log('[WorkspaceController] Creating headerProps with status:', workspace.status);
+      return {
+        aiModel,
+        status: workspace.status,
+        sandboxData: workspace.sandboxData,
+        conversationContext: workspace.conversationContext,
+        onModelChange: handleModelChange,
+        onCreateSandbox: () => workspace.createSandbox(),
+        onReapplyLastGeneration: handleReapplyLastGeneration,
+        onDownloadZip: handleDownloadZip,
+        onRefreshStatus: workspace.checkSandboxStatus,
+      };
+    },
     [
       aiModel,
       workspace.status,

@@ -9,11 +9,17 @@ interface StatusBarProps {
 export default function StatusBar({ status, onRefreshStatus }: StatusBarProps) {
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
+  // Debug logging to see if status is being updated
+  React.useEffect(() => {
+    console.log('[StatusBar] Status updated:', status);
+  }, [status]);
+
   // Handle refresh with visual feedback
   const handleRefresh = async () => {
     if (onRefreshStatus && !isRefreshing) {
       setIsRefreshing(true);
       try {
+        console.log('[StatusBar] Refreshing status...');
         await onRefreshStatus();
       } finally {
         // Reset after a short delay to show the refresh happened
@@ -72,13 +78,15 @@ export default function StatusBar({ status, onRefreshStatus }: StatusBarProps) {
   const statusIndicator = getStatusIndicator();
 
   return (
-    <div className="status-bar">
-      <div className="status-bar-content">
-        <div className="status-indicator">
+    <div className="backdrop-blur-sm bg-white/20 rounded-xl border border-white/30 shadow-lg overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-1.5">
+        <div className="flex items-center gap-2 min-w-[120px]">
           <div className={statusIndicator.className}></div>
-          <span className="status-text">{status.text}</span>
+          <span className="text-[#3d556e] font-semibold text-sm">
+            {status.text}
+          </span>
           {status.lastCheck && (
-            <span className="status-time">
+            <span className="text-gray-500 text-xs opacity-70">
               {Math.round((Date.now() - status.lastCheck) / 1000)}s ago
             </span>
           )}
@@ -87,7 +95,15 @@ export default function StatusBar({ status, onRefreshStatus }: StatusBarProps) {
         {onRefreshStatus && (
           <button
             onClick={handleRefresh}
-            className={`status-refresh-btn ${isRefreshing ? 'refreshing' : ''}`}
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${
+              isRefreshing
+                ? 'bg-blue-500 text-white scale-110 shadow-lg'
+                : 'bg-white/90 text-gray-600 hover:bg-white hover:text-gray-800 hover:scale-105 shadow-md'
+            } ${
+              status.type === 'checking' || isRefreshing
+                ? 'opacity-50 cursor-not-allowed'
+                : 'cursor-pointer'
+            }`}
             title="Refresh status"
             disabled={status.type === 'checking' || isRefreshing}
           >
@@ -107,134 +123,6 @@ export default function StatusBar({ status, onRefreshStatus }: StatusBarProps) {
           </button>
         )}
       </div>
-
-      <style jsx>{`
-        .status-bar {
-          backdrop-filter: blur(4px) saturate(145%);
-          -webkit-backdrop-filter: blur(4px) saturate(145%);
-          background-color: rgba(200, 200, 210, 0.2);
-          border-radius: 12px;
-          border: 1px solid #fff;
-          box-shadow:
-            0 4px 6px -1px rgba(0, 0, 0, 0.1),
-            0 2px 4px -2px rgba(0, 0, 0, 0.1);
-          padding: 0;
-          overflow: hidden;
-          position: relative;
-        }
-
-        .status-bar-content {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 12px;
-          color: #2d2d2d;
-          font-family: 'Funnel Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .status-indicator {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          min-width: 120px;
-        }
-
-        .status-text {
-          color: #3d556e;
-          font-weight: 600;
-        }
-
-        .status-time {
-          color: #666;
-          font-size: 12px;
-          opacity: 0.7;
-        }
-
-        .status-refresh-btn {
-          background: rgba(255, 255, 255, 0.9);
-          border: none;
-          border-radius: 50%;
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #666;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          pointer-events: auto;
-        }
-
-        .status-refresh-btn:hover {
-          background: rgba(255, 255, 255, 1);
-          color: #333;
-          transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .status-refresh-btn:active {
-          transform: scale(0.95);
-        }
-
-        .status-refresh-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .status-refresh-btn:focus {
-          outline: none;
-        }
-
-        .status-refresh-btn.refreshing {
-          background: rgba(59, 130, 246, 0.9);
-          color: white;
-          transform: scale(1.1);
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .status-refresh-btn.refreshing:hover {
-          background: rgba(59, 130, 246, 1);
-          transform: scale(1.1);
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-          .status-bar-content {
-            padding: 4px 8px;
-            font-size: 12px;
-          }
-
-          .status-indicator {
-            min-width: 100px;
-            gap: 6px;
-          }
-
-          .status-refresh-btn {
-            width: 20px;
-            height: 20px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .status-bar-content {
-            padding: 3px 6px;
-            font-size: 11px;
-          }
-
-          .status-indicator {
-            min-width: 80px;
-            gap: 4px;
-          }
-
-          .status-refresh-btn {
-            width: 18px;
-            height: 18px;
-          }
-        }
-      `}</style>
     </div>
   );
 }
