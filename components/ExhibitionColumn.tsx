@@ -131,7 +131,7 @@ export default function ExhibitionColumn({ className = '' }: ExhibitionColumnPro
                                    {/* Models and Tech Stack */}
                   <div className="flex gap-1 flex-shrink-0 justify-end">
                     {leader.models.slice(0, 2).map((model, modelIndex) => (
-                      <span key={modelIndex} className="text-xs bg-gray-100 px-1 rounded text-gray-600">
+                      <span key={modelIndex} className="text-xs bg-blue-100 text-blue-700 px-1 rounded">
                         {model}
                       </span>
                     ))}
@@ -141,7 +141,7 @@ export default function ExhibitionColumn({ className = '' }: ExhibitionColumnPro
                   </div>
                   <div className="flex gap-1 flex-shrink-0 justify-end">
                     {leader.tech_stack.slice(0, 2).map((tech, techIndex) => (
-                      <span key={techIndex} className="text-xs bg-gray-100 px-1 rounded text-gray-600">
+                      <span key={techIndex} className="text-xs bg-green-100 text-green-700 px-1 rounded">
                         {tech}
                       </span>
                     ))}
@@ -150,20 +150,20 @@ export default function ExhibitionColumn({ className = '' }: ExhibitionColumnPro
                     )}
                   </div>
                  
-                 {/* Bottom row: Username and Tasks */}
-                 <div className="flex items-center justify-between min-w-0">
-                   <span className="text-xs text-blue-600 truncate">@{leader.username}</span>
-                   <div className="flex gap-1 flex-shrink-0">
-                     {leader.tasks.slice(0, 2).map((task, taskIndex) => (
-                       <span key={taskIndex} className="text-xs bg-gray-100 px-1 rounded text-gray-600">
-                         {task}
-                       </span>
-                     ))}
-                     {leader.tasks.length > 2 && (
-                       <span className="text-xs text-gray-400">+{leader.tasks.length - 2}</span>
-                     )}
-                   </div>
-                 </div>
+                                   {/* Bottom row: Username and Tasks */}
+                  <div className="flex items-center justify-between min-w-0">
+                    <span className="text-xs text-blue-600 truncate">@{leader.username}</span>
+                    <div className="flex gap-1 flex-shrink-0">
+                      {leader.tasks.slice(0, 2).map((task, taskIndex) => (
+                        <span key={taskIndex} className="text-xs bg-purple-100 text-purple-700 px-1 rounded">
+                          {task}
+                        </span>
+                      ))}
+                      {leader.tasks.length > 2 && (
+                        <span className="text-xs text-gray-400">+{leader.tasks.length - 2}</span>
+                      )}
+                    </div>
+                  </div>
                </div>
           </Project>
         ))
