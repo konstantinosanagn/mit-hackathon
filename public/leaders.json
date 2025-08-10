@@ -1,0 +1,57 @@
+[
+  {
+    "project_name": "ChefAI",
+    "likes": 1000,
+    "description": "An AI-powered cooking assistant that generates recipes from pantry snapshots.",
+    "username": "foodtech_wizard",
+    "models": ["GPT 4", "Claude 3"],
+    "tech_stack": ["Python", "Tensorflow", "React"],
+    "tasks": ["text generation", "chatbot"]
+  },
+  {
+    "project_name": "VisionCraft",
+    "likes": 742,
+    "description": "A computer vision toolkit for generating and editing images on the fly.",
+    "username": "pixel_mage",
+    "models": ["GPT 4", "Gemini Pro", "DALL-E"],
+    "tech_stack": ["Python", "PyTorch", "Javascript"],
+    "tasks": ["image generation", "data analysis"]
+  },
+  {
+    "project_name": "PromptPilot",
+    "likes": 1835,
+    "description": "An AI prompt optimization platform for boosting LLM output quality.",
+    "username": "nlp_captain",
+    "models": ["GPT 4", "Claude 3", "Llama 3"],
+    "tech_stack": ["Python", "React", "Javascript"],
+    "tasks": ["text generation", "fine-tuning"]
+  },
+  {
+    "project_name": "CodeGenie",
+    "likes": 1294,
+    "description": "Your AI coding partner that writes and debugs software in real time.",
+    "username": "stack_sorcerer",
+    "models": ["GPT 4", "Claude 3", "Mistral"],
+    "tech_stack": ["Python", "PyTorch", "Javascript", "React"],
+    "tasks": ["text generation", "chatbot", "data analysis"]
+  },
+  {
+    "project_name": "HealthSage",
+    "likes": 865,
+    "description": "A personalized health analytics platform powered by AI insights.",
+    "username": "med_ai_guru",
+    "models": ["GPT 4", "Claude 3", "Gemini Pro"],
+    "tech_stack": ["Python", "Tensorflow"],
+    "tasks": ["data analysis", "text generation"]
+  },
+  {
+    "project_name": "SynthSpeech",
+    "likes": 1527,
+    "description": "An AI system for generating lifelike voices and audio from text.",
+    "username": "voice_synth_master",
+    "models": ["GPT 4", "Mistral", "Llama 3"],
+    "tech_stack": ["Python", "PyTorch", "Javascript"],
+    "tasks": ["text generation", "fine-tuning"]
+  }
+]
+

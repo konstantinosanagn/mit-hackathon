@@ -37,13 +37,13 @@ export default function HomeScreen({
       {/* Simple Sun Gradient Background */}
       <div className="absolute inset-0 bg-white overflow-hidden">
         {/* Main Sun - Pulsing */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-orange-400/50 via-orange-300/30 to-transparent rounded-full blur-[80px] animate-[sunPulse_4s_ease-in-out_infinite]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-blue-900/70 via-blue-700/50 to-transparent rounded-full blur-[80px] animate-[sunPulse_4s_ease-in-out_infinite]" />
 
         {/* Inner Sun Core - Brighter */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-radial from-yellow-300/40 via-orange-400/30 to-transparent rounded-full blur-[40px] animate-[sunPulse_4s_ease-in-out_infinite_0.5s]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-radial from-blue-800/60 via-blue-600/40 to-transparent rounded-full blur-[40px] animate-[sunPulse_4s_ease-in-out_infinite_0.5s]" />
 
         {/* Outer Glow - Subtle */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-gradient-radial from-orange-200/20 to-transparent rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-gradient-radial from-blue-500/40 to-transparent rounded-full blur-[120px]" />
 
         {/* Giant Glowing Orb - Center Bottom */}
         <div
@@ -51,16 +51,16 @@ export default function HomeScreen({
           style={{ transform: 'translateX(-50%) translateY(45%)' }}
         >
           <div className="relative w-full h-full">
-            <div className="absolute inset-0 bg-orange-600 rounded-full blur-[100px] opacity-30 animate-pulse"></div>
+            <div className="absolute inset-0 bg-blue-950 rounded-full blur-[100px] opacity-50 animate-pulse"></div>
             <div
-              className="absolute inset-16 bg-orange-500 rounded-full blur-[80px] opacity-40 animate-pulse"
+              className="absolute inset-16 bg-blue-900 rounded-full blur-[80px] opacity-60 animate-pulse"
               style={{ animationDelay: '0.3s' }}
             ></div>
             <div
-              className="absolute inset-32 bg-orange-400 rounded-full blur-[60px] opacity-50 animate-pulse"
+              className="absolute inset-32 bg-blue-800 rounded-full blur-[60px] opacity-70 animate-pulse"
               style={{ animationDelay: '0.6s' }}
             ></div>
-            <div className="absolute inset-48 bg-yellow-300 rounded-full blur-[40px] opacity-60"></div>
+            <div className="absolute inset-48 bg-blue-700 rounded-full blur-[40px] opacity-80"></div>
           </div>
         </div>
       </div>
@@ -93,6 +93,19 @@ export default function HomeScreen({
         <div className="h-8 flex items-center text-[#36322F] font-semibold text-lg">
           Replicate Hub
         </div>
+                    <div className="absolute left-1/2 transform -translate-x-1/2">
+              <a
+                href="/marketplace"
+                className="font-ui font-medium text-lg text-blue-700 hover:text-blue-900 transition-colors duration-200 cursor-pointer tracking-wider flex items-center gap-2 group"
+              >
+                <img 
+                  src="/palette-logo.svg"
+                  alt="Palette icon"
+                  className="w-5 h-5 palette-icon-blue transition-all duration-300 group-hover:rotate-360"
+                />
+                <span className="terminal-text">the_exhibition</span>
+              </a>
+            </div>
         <button className="inline-flex items-center gap-2 bg-[#36322F] text-white px-3 py-2 rounded-[10px] text-sm font-medium [box-shadow:inset_0px_-2px_0px_0px_#171310,_0px_1px_6px_0px_rgba(58,_33,_8,_58%)] hover:translate-y-[1px] hover:scale-[0.98] hover:[box-shadow:inset_0px_-1px_0px_0px_#171310,_0px_1px_3px_0px_rgba(58,_33,_8,_40%)] active:translate-y-[2px] active:scale-[0.97] active:[box-shadow:inset_0px_1px_1px_0px_#171310,_0px_1px_2px_0px_rgba(58,_33,_8,_30%)] transition-all duration-200">
           <span>Sign In</span>
         </button>
@@ -123,7 +136,7 @@ export default function HomeScreen({
               <button
                 type="button"
                 onClick={onNewProjectClick}
-                className="h-[3.25rem] w-full flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-orange-500 focus-visible:ring-2 rounded-[18px] text-sm text-[#36322F] px-4 border-[.75px] border-border bg-white hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                className="h-[3.25rem] w-full flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-blue-500 focus-visible:ring-2 rounded-[18px] text-sm text-[#36322F] px-4 border-[.75px] border-border bg-white hover:bg-gray-50 transition-all duration-200 cursor-pointer"
                 style={{
                   boxShadow:
                     '0 0 0 1px #e3e1de66, 0 1px 2px #5f4a2e14, 0 4px 6px #5f4a2e0a, 0 40px 40px -24px #684b2514',

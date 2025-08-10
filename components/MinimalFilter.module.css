@@ -1,0 +1,42 @@
+.minimal-filter {
+  background: transparent;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.minimal-filter:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: #333333;
+}
+
+.minimal-filter:active {
+  background: rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.filter-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.dropdown-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  transition: transform 0.2s ease;
+}
+
+.minimal-filter:hover .dropdown-icon {
+  transform: translateY(1px);
+}

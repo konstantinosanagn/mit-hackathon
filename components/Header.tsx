@@ -64,6 +64,20 @@ export default function Header({
         )}
       </div>
 
+                        <div className="absolute left-1/2 transform -translate-x-1/2">
+                    <a
+                      href="/marketplace"
+                      className="font-ui font-medium text-lg text-blue-700 hover:text-blue-900 transition-colors duration-200 cursor-pointer tracking-wider flex items-center gap-2 group"
+                    >
+                      <img 
+                        src="/palette-logo.svg"
+                        alt="Palette icon"
+                        className="w-5 h-5 palette-icon-blue transition-all duration-300 group-hover:rotate-360"
+                      />
+                      <span className="terminal-text">the_exhibition</span>
+                    </a>
+                  </div>
+
       <div className="flex items-center gap-2">
         {/* Model Selector */}
         <select
