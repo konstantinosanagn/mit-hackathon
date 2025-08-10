@@ -23,8 +23,6 @@ export async function listFiles(directory = ''): Promise<EnhancedFileEntry[]> {
   const response = await backendFetch(url);
   const data = await response.json();
   
-  console.log('[/api/list] Response:', data);
-  
   if (Array.isArray(data)) {
     // Simple array of filenames - convert to enhanced entries
     return data.map(name => {
@@ -131,6 +129,20 @@ export async function readTextFile(path: string): Promise<string> {
   const url = `/api/read?path=${encodeURIComponent(path)}`;
   const res = await backendFetch(url);
   if (!res.ok) throw new Error(`Failed to read file (${res.status})`);
+  const contentType = res.headers.get('Content-Type') || '';
+  // If backend returns JSON { content: string }, unwrap it; otherwise return raw text
+  if (contentType.includes('application/json')) {
+    try {
+      const data = await res.json();
+      if (typeof data?.content === 'string') return data.content as string;
+      // Fallbacks for older shapes
+      if (typeof data === 'string') return data;
+      return JSON.stringify(data, null, 2);
+    } catch {
+      // If JSON parse fails, fall back to text
+      return res.text();
+    }
+  }
   return res.text();
 }
 

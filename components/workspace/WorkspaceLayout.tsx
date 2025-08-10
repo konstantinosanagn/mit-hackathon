@@ -48,6 +48,7 @@ export default function WorkspaceLayout({
         onMinimize={closeTerminal}
         onMaximize={closeTerminal}
         sandboxStatus={sandboxStatus}
+        project={project}
       />
 
       {/* Terminal Toggle Button - Fixed position */}

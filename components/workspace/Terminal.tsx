@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { backendFetch } from '@/lib/backend';
 import { ChevronRight, Terminal as TerminalIcon, X, Minimize2, Maximize2 } from 'lucide-react';
 
 interface TerminalOutput {
@@ -15,9 +16,10 @@ interface TerminalProps {
   onMinimize?: () => void;
   onMaximize?: () => void;
   sandboxStatus?: any; // Add sandbox status prop
+  project?: string;
 }
 
-export default function Terminal({ isOpen, onToggle, onMinimize, onMaximize, sandboxStatus }: TerminalProps) {
+export default function Terminal({ isOpen, onToggle, onMinimize, onMaximize, sandboxStatus, project }: TerminalProps) {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [currentCommand, setCurrentCommand] = useState('');
@@ -45,11 +47,8 @@ export default function Terminal({ isOpen, onToggle, onMinimize, onMaximize, san
   // Add initial welcome message
   useEffect(() => {
     if (outputs.length === 0) {
-      const sandboxInfo = sandboxStatus?.active 
-        ? `\n✓ Sandbox is active and ready`
-        : sandboxStatus?.type === 'creating'
-        ? `\n⏳ Creating sandbox... Please wait`
-        : `\n⚠ No active sandbox - commands will be limited`;
+      // No noisy sandbox status logging in terminal output
+      const sandboxInfo = '';
       
       setOutputs([{
         type: 'output',
@@ -58,16 +57,17 @@ export default function Terminal({ isOpen, onToggle, onMinimize, onMaximize, san
 Available commands:
 • help - Show this help message
 • clear - Clear terminal output
-• create-sandbox - Manually create a new sandbox
 • status - Show current sandbox status
 • refresh - Refresh sandbox status
 • ls - List files in current directory
+• dir - List files in current directory (Windows equivalent)
 • pwd - Show current working directory
 • cat <file> - Display file contents
 • npm install <package> - Install npm packages
 • python <script> - Run Python scripts${sandboxInfo}
 
 Working directory: ${workingDirectory}
+Project: ${project || 'not selected'}
 
 Type 'help' for more information.`,
         timestamp: new Date()
@@ -80,11 +80,7 @@ Type 'help' for more information.`,
 
     // Handle built-in commands
     if (command === 'help') {
-      const sandboxInfo = sandboxStatus?.active 
-        ? `\n✓ Sandbox is active and ready`
-        : sandboxStatus?.type === 'creating'
-        ? `\n⏳ Creating sandbox... Please wait`
-        : `\n⚠ No active sandbox - commands will be limited`;
+      const sandboxInfo = '';
       
       setOutputs(prev => [...prev, {
         type: 'input',
@@ -95,10 +91,10 @@ Type 'help' for more information.`,
         content: `Available commands:
 • help - Show this help message
 • clear - Clear terminal output
-• create-sandbox - Manually create a new sandbox
 • status - Show current sandbox status
 • refresh - Refresh sandbox status
 • ls - List files in current directory
+• dir - List files in current directory (Windows equivalent)
 • pwd - Show current working directory
 • cat <file> - Display file contents
 • npm install <package> - Install npm packages
@@ -118,6 +114,10 @@ For other commands, they will be executed in your sandbox environment.`,
       return;
     }
 
+    // For all other commands (including pwd, ls/dir, cat, npm, python etc.),
+    // fall through to the generic exec handler below so we always send the
+    // backend request and show its response (even if sandbox is inactive).
+
     if (command === 'create-sandbox') {
       setOutputs(prev => [...prev, {
         type: 'input',
@@ -125,37 +125,9 @@ For other commands, they will be executed in your sandbox environment.`,
         timestamp: new Date()
       }, {
         type: 'output',
-        content: 'Creating new sandbox... This may take a few moments.',
+        content: 'Sandbox creation is handled by the backend. This command is disabled in the UI.',
         timestamp: new Date()
       }]);
-      
-      // Call the create sandbox API
-      fetch('/api/create-ai-sandbox', {
-        method: 'POST',
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          setOutputs(prev => [...prev, {
-            type: 'output',
-            content: `✓ Sandbox created successfully!\nURL: ${result.url}\nSandbox ID: ${result.sandboxId}`,
-            timestamp: new Date()
-          }]);
-        } else {
-          setOutputs(prev => [...prev, {
-            type: 'error',
-            content: `Failed to create sandbox: ${result.error}`,
-            timestamp: new Date()
-          }]);
-        }
-      })
-      .catch(error => {
-        setOutputs(prev => [...prev, {
-          type: 'error',
-          content: `Error creating sandbox: ${error.message}`,
-          timestamp: new Date()
-        }]);
-      });
       
       setCurrentCommand('');
       return;
@@ -220,20 +192,7 @@ For other commands, they will be executed in your sandbox environment.`,
       return;
     }
 
-    // Check if sandbox is available for external commands
-    if (!sandboxStatus?.active && command !== 'help' && command !== 'clear') {
-      setOutputs(prev => [...prev, {
-        type: 'input',
-        content: `$ ${command}`,
-        timestamp: new Date()
-      }, {
-        type: 'error',
-        content: `Error: No active sandbox. The sandbox is being created or is unavailable. Please wait for it to be ready or try again later.`,
-        timestamp: new Date()
-      }]);
-      setCurrentCommand('');
-      return;
-    }
+    // No pre-check: always send exec request so the UI logs the backend response
 
     // Add command to history
     const newHistory = [...commandHistory, command];
@@ -252,29 +211,36 @@ For other commands, they will be executed in your sandbox environment.`,
     setIsExecuting(true);
 
     try {
-      const response = await fetch('/api/run-command', {
+      const startTs = Date.now();
+      // Hide request logging in terminal output per requirement
+
+      const response = await backendFetch('/api/sandbox/exec', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ command }),
+        body: JSON.stringify({ cmd: command }),
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        setOutputs(prev => [...prev, {
-          type: 'output',
-          content: result.output || 'Command executed successfully.',
-          timestamp: new Date()
-        }]);
-      } else {
+      if (!response.ok) {
+        const text = await response.text();
+        // Only show backend error text as terminal error
         setOutputs(prev => [...prev, {
           type: 'error',
-          content: `Error: ${result.error}`,
+          content: text || `HTTP ${response.status} ${response.statusText}`,
           timestamp: new Date()
         }]);
+        throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
       }
+
+      const result = await response.json();
+      // Only output stdout in the terminal view
+      const stdout: string = result.stdout ?? '';
+      setOutputs(prev => [...prev, {
+        type: 'output',
+        content: stdout,
+        timestamp: new Date()
+      }]);
     } catch (error) {
       setOutputs(prev => [...prev, {
         type: 'error',
@@ -343,32 +309,7 @@ For other commands, they will be executed in your sandbox environment.`,
           <span className="text-sm font-medium text-gray-200">Terminal</span>
           <span className="text-xs text-gray-400">({workingDirectory})</span>
           
-          {/* Sandbox Status Indicator */}
-          {sandboxStatus && (
-            <div className="flex items-center space-x-1 ml-2">
-              <div className={`w-2 h-2 rounded-full ${
-                sandboxStatus.active 
-                  ? 'bg-green-400' 
-                  : sandboxStatus.type === 'creating'
-                  ? 'bg-yellow-400 animate-pulse'
-                  : 'bg-red-400'
-              }`} />
-              <span className={`text-xs ${
-                sandboxStatus.active 
-                  ? 'text-green-400' 
-                  : sandboxStatus.type === 'creating'
-                  ? 'text-yellow-400'
-                  : 'text-red-400'
-              }`}>
-                {sandboxStatus.active 
-                  ? 'Sandbox Ready' 
-                  : sandboxStatus.type === 'creating'
-                  ? 'Creating...'
-                  : 'No Sandbox'
-                }
-              </span>
-            </div>
-          )}
+          {/* Sandbox status pill removed per requirement */}
         </div>
         
         <div className="flex items-center space-x-1">

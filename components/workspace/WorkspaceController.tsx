@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { appConfig } from '@/config/app.config';
 import { ActiveTab } from '@/types/app';
 import { useWorkspace } from './WorkspaceProvider';
+import { backendFetch } from '@/lib/backend';
 
 interface WorkspaceControllerProps {
   children: (props: {
@@ -28,6 +29,32 @@ export default function WorkspaceController({ children }: WorkspaceControllerPro
   const workspace = useWorkspace();
   const searchParams = useSearchParams();
   const project = searchParams.get('project');
+
+  // Ensure backend sandbox/workspace is initialised when a project is loaded
+  const lastInitialisedProjectRef = useRef<string | null>(null);
+  useEffect(() => {
+    const initSandbox = async (name: string) => {
+      try {
+        const res = await backendFetch('/api/sandbox/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project: name }),
+        });
+        if (!res.ok) {
+          console.warn('[WorkspaceController] Sandbox init failed:', res.status, res.statusText);
+        } else {
+          console.log('[WorkspaceController] Sandbox init OK for project', name);
+        }
+      } catch (e) {
+        console.warn('[WorkspaceController] Sandbox init error:', e);
+      }
+    };
+
+    if (project && lastInitialisedProjectRef.current !== project) {
+      lastInitialisedProjectRef.current = project;
+      initSandbox(project).catch(() => {});
+    }
+  }, [project]);
 
   // Memoized event handlers
   const handleSendChatMessage = useCallback(async () => {

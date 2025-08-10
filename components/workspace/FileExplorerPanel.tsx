@@ -4,6 +4,8 @@ import { useState } from 'react';
 import FileTreeViewer from './FileTreeViewer';
 import FileContentViewer from './FileContentViewer';
 import FileUploadModal from './FileUploadModal';
+import TextInputModal from '@/components/projects/TextInputModal';
+import { createFile } from '@/lib/filesApi';
 import { useTerminal } from '@/hooks/useTerminal';
 
 interface FileExplorerPanelProps {
@@ -13,6 +15,7 @@ interface FileExplorerPanelProps {
 export default function FileExplorerPanel({ project }: FileExplorerPanelProps) {
   const [selected, setSelected] = useState<string | undefined>(undefined);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { openTerminal } = useTerminal();
 
   const handleUploadComplete = () => {
@@ -34,6 +37,13 @@ export default function FileExplorerPanel({ project }: FileExplorerPanelProps) {
                 title="Open Terminal"
               >
                 💻
+              </button>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors"
+                title="Create new file"
+              >
+                ＋
               </button>
               <button
                 onClick={() => setIsUploadModalOpen(true)}
@@ -58,6 +68,21 @@ export default function FileExplorerPanel({ project }: FileExplorerPanelProps) {
         onClose={() => setIsUploadModalOpen(false)}
         onUploadComplete={handleUploadComplete}
         currentPath="/"
+      />
+
+      {/* Create New File Modal */}
+      <TextInputModal
+        title="Create new file"
+        placeholder="e.g. src/components/NewComponent.jsx"
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={async (value: string) => {
+          const cleanPath = value.startsWith('/') ? value : `/${value}`;
+          await createFile(cleanPath, '');
+          setIsCreateModalOpen(false);
+          // refresh tree
+          setSelected(undefined);
+        }}
       />
     </div>
   );

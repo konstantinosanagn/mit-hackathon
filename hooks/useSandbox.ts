@@ -24,6 +24,16 @@ interface SandboxStatus {
 }
 
 export function useSandbox() {
+  // Build a URL against this Next.js app (not the FastAPI backend)
+  const buildAppApiUrl = (path: string) => {
+    const base =
+      (typeof window !== 'undefined' && window.location.origin) ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      '';
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${normalized}`;
+  };
+
   const [sandboxData, setSandboxData] = useState<SandboxData | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<SandboxStatus>({
@@ -206,7 +216,7 @@ export function useSandbox() {
         }
       }, 10000); // 10 second timeout
 
-      const response = await backendFetch('/api/sandbox/status', {
+      const response = await fetch(buildAppApiUrl('/api/sandbox-status'), {
         signal: controller.signal,
         headers: {
           'Cache-Control': 'no-cache',
@@ -380,7 +390,7 @@ export function useSandbox() {
           }
         }, 5000);
 
-        await backendFetch('/api/conversation-state', {
+        await fetch(buildAppApiUrl('/api/conversation-state'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'clear-old' }),
@@ -403,34 +413,7 @@ export function useSandbox() {
       if (isMountedRef.current && isInitializing && !isCleanedUp) {
         await checkSandboxStatus();
         
-        // If no sandbox exists, automatically create one
-        if (isMountedRef.current && !isCleanedUp && !sandboxData) {
-          console.log('[useSandbox] No sandbox found, auto-creating...');
-          try {
-            updateStatus('Creating sandbox...', false, 'creating');
-            const response = await backendFetch('/api/create-ai-sandbox', {
-              method: 'POST',
-            });
-            
-            if (response.ok) {
-              const result = await response.json();
-              if (result.success) {
-                console.log('[useSandbox] Auto-created sandbox:', result);
-                // Wait a moment for the sandbox to fully initialize, then check status
-                setTimeout(() => {
-                  if (isMountedRef.current && !isCleanedUp) {
-                    checkSandboxStatus();
-                  }
-                }, 3000);
-              }
-            }
-          } catch (error) {
-            if (error instanceof Error && error.name !== 'AbortError') {
-              console.error('[useSandbox] Failed to auto-create sandbox:', error);
-              updateStatus('Failed to create sandbox', false, 'error');
-            }
-          }
-        }
+        // Do not auto-create sandbox on the frontend. Backend is responsible.
       }
     };
 

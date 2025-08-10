@@ -146,4 +146,41 @@ sandbox_workspace/    # Deprecated; now identical to workspaces/ but kept for ba
 
 ---
 
+## 5. Terminal / CLI Endpoint
+
+`POST /api/sandbox/exec`
+
+Executes arbitrary shell command **inside the active sandbox workspace**.
+
+Body
+```json
+{
+  "cmd": "pip install requests",
+  "timeout": 60   // optional, seconds (default 60)
+}
+```
+
+Response
+```json
+{
+  "stdout": "…",
+  "stderr": "…",
+  "code": 0
+}
+```
+
+Rules & behaviour
+* Command runs with working directory = project root (`workspaces/<project>/`).
+* If `venv/` exists its `bin` directory is prepended to `PATH` – so `python`, `pip` etc. use the sandbox’s virtual-env.
+* The endpoint returns only after the process exits or after the timeout.
+* Not exposed to AI tool-calling (only for human users via the terminal pane).
+
+Error responses
+| Code | Reason |
+|------|--------|
+| 400  | Missing `cmd` or sandbox not initialised |
+| 500  | Subprocess error (rare) |
+
+---
+
 > Maintainer: Shellles Backend Team

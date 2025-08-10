@@ -86,11 +86,17 @@ export function useChat() {
       // Prepare messages for AI (include recent conversation context)
       const recentMessages = chatMessages.slice(-10); // Last 10 messages for context
       const aiMessages = [
-        ...recentMessages.map(msg => ({
-          role: msg.type === 'user' ? 'user' : 'assistant' as const,
-          content: msg.content
-        })),
-        { role: 'user' as const, content: userMessage }
+        ...recentMessages
+          .map(msg => {
+            const role: 'user' | 'assistant' | 'system' =
+              msg.type === 'user'
+                ? 'user'
+                : msg.type === 'system'
+                  ? 'system'
+                  : 'assistant';
+            return { role, content: msg.content };
+          }),
+        { role: 'user' as const, content: userMessage },
       ];
 
       const chatRequest: AIChatRequest = {
@@ -107,8 +113,12 @@ export function useChat() {
 
       const aiResponse = await response.json();
 
-      // Add AI response to chat
-      addChatMessage(aiResponse.assistant, 'assistant');
+      // Add AI response to chat (store as 'ai' for rendering)
+      if (aiResponse && typeof aiResponse.assistant === 'string') {
+        addChatMessage(aiResponse.assistant, 'ai');
+      } else {
+        addChatMessage('Received an unexpected response from AI.', 'system');
+      }
 
       // Update conversation context if needed
       if (aiResponse.messages && aiResponse.messages.length > 0) {
