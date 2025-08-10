@@ -40,7 +40,7 @@ interface WorkspaceContextType {
   // Actions
   setAiChatInput: (value: string) => void;
   addChatMessage: (content: string, type: any, metadata?: any) => void;
-  sendMessage: (message: string, project?: string) => Promise<void>;
+  sendMessage: (message: string, project?: string, modelOverride?: 'kimi2' | 'gpt5' | 'claude') => Promise<void>;
   updateConversationContext: (updates: any) => void;
   setGenerationProgress: (progress: any) => void;
   setPromptInput: (value: string) => void;
@@ -59,6 +59,17 @@ interface WorkspaceContextType {
   setIsPreparingDesign: (value: boolean) => void;
   setTargetUrl: (value: string) => void;
   setLoadingStage: (value: any) => void;
+  // Chat sessions
+  sessions: string[];
+  currentSession: string;
+  setCurrentSession: (name: string) => void;
+  isSessionsVisible: boolean;
+  setIsSessionsVisible: (visible: boolean) => void;
+  refreshSessions: () => Promise<void> | void;
+  loadSession: (name: string) => Promise<void>;
+  createSession: (name: string) => Promise<void>;
+  deleteSession: (name: string) => Promise<void>;
+  clearChatHistory: () => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -140,6 +151,17 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     setIsPreparingDesign: homeScreenData.setIsPreparingDesign,
     setTargetUrl: homeScreenData.setTargetUrl,
     setLoadingStage: homeScreenData.setLoadingStage,
+    // sessions
+    sessions: chatData.sessions,
+    currentSession: chatData.currentSession,
+    setCurrentSession: chatData.setCurrentSession,
+    isSessionsVisible: chatData.isSessionsVisible,
+    setIsSessionsVisible: chatData.setIsSessionsVisible,
+    refreshSessions: chatData.refreshSessions,
+    loadSession: chatData.loadSession,
+    createSession: chatData.createSession,
+    deleteSession: chatData.deleteSession,
+    clearChatHistory: chatData.clearChatHistory,
   };
 
   return (

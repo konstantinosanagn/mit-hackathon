@@ -1,6 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import { getAvailableModels, AvailableModel } from '@/lib/aiApi';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ConversationContext, SandboxStatus } from '@/types/app';
 import { useNetworkStatus } from '@/lib/network';
@@ -31,6 +33,24 @@ export default function Header({
   const searchParams = useSearchParams();
   const router = useRouter();
   const networkStatus = useNetworkStatus();
+  const [modelOptions, setModelOptions] = useState<AvailableModel[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const models = await getAvailableModels();
+        setModelOptions(models);
+      } catch (e) {
+        console.warn('[Header] Failed to fetch models', e);
+        // Fallback defaults
+        setModelOptions([
+          { label: 'Kimi K2 Instruct', provider: 'moonshotai', model_id: 'moonshotai/kimi-k2-instruct' },
+          { label: 'GPT-5', provider: 'openai', model_id: 'openai/gpt-5' },
+          { label: 'Sonnet 4', provider: 'anthropic', model_id: 'anthropic/claude-sonnet-4-20250514' },
+        ]);
+      }
+    })();
+  }, []);
 
   const handleModelChange = (model: string) => {
     setAiModel(model);
@@ -81,9 +101,11 @@ export default function Header({
           className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#36322F] focus:border-transparent"
           disabled={!networkStatus.isOnline}
         >
-          <option value="moonshotai/kimi-k2-instruct">Kimi K2 Instruct</option>
-          <option value="openai/gpt-5">GPT-5</option>
-          <option value="anthropic/claude-sonnet-4-20250514">Sonnet 4</option>
+          {modelOptions.map(m => (
+            <option key={m.model_id} value={m.model_id}>
+              {m.label}
+            </option>
+          ))}
         </select>
 
         {/* Status Bar Component */}

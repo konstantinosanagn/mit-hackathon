@@ -66,9 +66,14 @@ export default function WorkspaceController({ children }: WorkspaceControllerPro
       return;
     }
 
-    // Use the new backend AI chat functionality
-    await workspace.sendMessage(message, project || undefined);
-  }, [workspace, project]);
+    // Map UI model to backend model ids expected by API
+    let backendModel: 'kimi2' | 'gpt5' | 'claude' = 'kimi2';
+    if (aiModel.includes('gpt-5')) backendModel = 'gpt5';
+    else if (aiModel.includes('anthropic')) backendModel = 'claude';
+    else backendModel = 'kimi2';
+
+    await workspace.sendMessage(message, project || undefined, backendModel);
+  }, [workspace, project, aiModel]);
 
   const handleRefreshSandbox = useCallback(async () => {
     if (!workspace.sandboxData) {
@@ -119,6 +124,24 @@ export default function WorkspaceController({ children }: WorkspaceControllerPro
       chatMessagesRef: workspace.chatMessagesRef,
       onInputChange: workspace.setAiChatInput,
       onSendMessage: handleSendChatMessage,
+      // sessions
+      sessions: workspace.sessions,
+      currentSession: workspace.currentSession,
+      onSelectSession: (name: string) => workspace.loadSession(name),
+      onCreateSession: (name: string) => workspace.createSession(name),
+      onDeleteSession: async (name: string) => {
+        console.debug('[WorkspaceController] Request delete session', name);
+        // If deleting current, switch selection first to avoid UI race
+        if (workspace.currentSession === name) {
+          const fallback = workspace.sessions.find(s => s !== name);
+          if (fallback) await workspace.loadSession(fallback);
+        }
+        await workspace.deleteSession(name);
+        console.debug('[WorkspaceController] Delete session completed', name);
+      },
+      onClearHistory: () => workspace.clearChatHistory(),
+      isSessionsVisible: workspace.isSessionsVisible,
+      setIsSessionsVisible: workspace.setIsSessionsVisible,
     }),
     [
       workspace.conversationContext,
@@ -131,6 +154,9 @@ export default function WorkspaceController({ children }: WorkspaceControllerPro
       workspace.chatMessagesRef,
       workspace.setAiChatInput,
       handleSendChatMessage,
+      workspace.sessions,
+      workspace.currentSession,
+      workspace.isSessionsVisible,
     ]
   );
 

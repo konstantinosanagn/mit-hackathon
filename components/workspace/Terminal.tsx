@@ -44,36 +44,7 @@ export default function Terminal({ isOpen, onToggle, onMinimize, onMaximize, san
     }
   }, [isOpen]);
 
-  // Add initial welcome message
-  useEffect(() => {
-    if (outputs.length === 0) {
-      // No noisy sandbox status logging in terminal output
-      const sandboxInfo = '';
-      
-      setOutputs([{
-        type: 'output',
-        content: `Welcome to the MIT Hackathon Terminal! 🚀
-
-Available commands:
-• help - Show this help message
-• clear - Clear terminal output
-• status - Show current sandbox status
-• refresh - Refresh sandbox status
-• ls - List files in current directory
-• dir - List files in current directory (Windows equivalent)
-• pwd - Show current working directory
-• cat <file> - Display file contents
-• npm install <package> - Install npm packages
-• python <script> - Run Python scripts${sandboxInfo}
-
-Working directory: ${workingDirectory}
-Project: ${project || 'not selected'}
-
-Type 'help' for more information.`,
-        timestamp: new Date()
-      }]);
-    }
-  }, [workingDirectory, sandboxStatus]);
+  // Remove welcoming message per requirement
 
   const executeCommand = useCallback(async (command: string) => {
     if (!command.trim()) return;

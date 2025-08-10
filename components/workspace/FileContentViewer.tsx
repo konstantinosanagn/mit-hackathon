@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { readTextFile, getFileMetadata } from '@/lib/filesApi';
+import { useEffect, useState, useCallback } from 'react';
+import { readTextFile, getFileMetadata, saveFile } from '@/lib/filesApi';
 import { getFileIcon, getFileColor, isEditableFile, isPreviewableFile, getFileExtension } from '@/lib/file-utils';
 
 interface FileContentViewerProps {
@@ -11,9 +11,12 @@ interface FileContentViewerProps {
 
 export default function FileContentViewer({ filePath, project }: FileContentViewerProps) {
   const [content, setContent] = useState('');
+  const [editorValue, setEditorValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [metadata, setMetadata] = useState<any>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!filePath) return;
@@ -31,6 +34,8 @@ export default function FileContentViewer({ filePath, project }: FileContentView
         if (isEditableFile(filePath)) {
           const text = await readTextFile(filePath);
           setContent(text);
+          setEditorValue(text);
+          setIsDirty(false);
         }
       } catch (e: any) {
         setError(e.message || 'Failed to read file');
@@ -41,6 +46,20 @@ export default function FileContentViewer({ filePath, project }: FileContentView
     
     loadFile();
   }, [filePath]);
+
+  const handleSave = useCallback(async () => {
+    if (!filePath || !isEditableFile(filePath) || !isDirty) return;
+    try {
+      setSaving(true);
+      await saveFile(filePath, editorValue);
+      setContent(editorValue);
+      setIsDirty(false);
+    } catch (e: any) {
+      setError(e.message || 'Failed to save file');
+    } finally {
+      setSaving(false);
+    }
+  }, [filePath, editorValue, isDirty]);
 
   if (!filePath) {
     return (
@@ -83,69 +102,43 @@ export default function FileContentViewer({ filePath, project }: FileContentView
 
   return (
     <div className="h-full flex flex-col">
-      {/* File header with properties */}
-      <div className="border-b border-gray-200 bg-gray-50 p-4">
-        <div className="flex items-center space-x-3 mb-3">
-          <span className="text-2xl">{getFileIcon(fileName, false)}</span>
-          <div>
-            <h3 className={`font-medium ${getFileColor(fileName, false)}`}>
-              {fileName}
-            </h3>
-            <p className="text-sm text-gray-500">
-              {filePath}
-            </p>
-          </div>
-        </div>
-        
-        {/* File properties */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500">Type:</span>
-            <span className="ml-2 font-medium">{fileExtension || 'Unknown'}</span>
-          </div>
-          {metadata?.size !== undefined && (
-            <div>
-              <span className="text-gray-500">Size:</span>
-              <span className="ml-2 font-medium">
-                {metadata.size >= 1024 
-                  ? `${(metadata.size / 1024).toFixed(1)} KB` 
-                  : `${metadata.size} B`
-                }
-              </span>
-            </div>
+      {/* File header minimal */}
+      <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{getFileIcon(fileName, false)}</span>
+          <h3 className={`font-medium ${getFileColor(fileName, false)} truncate`}>{fileName}</h3>
+          {isEditable && (
+            <span className={`ml-2 inline-block w-2 h-2 rounded-full ${isDirty ? 'bg-black' : 'bg-transparent border border-gray-300'}`} title={isDirty ? 'Unsaved changes' : 'Saved'} />
           )}
-          {metadata?.lastModified && (
-            <div>
-              <span className="text-gray-500">Modified:</span>
-              <span className="ml-2 font-medium">
-                {new Date(metadata.lastModified).toLocaleString()}
-              </span>
-            </div>
+          {isEditable && (
+            <button
+              onClick={handleSave}
+              className="ml-auto text-xs px-2 py-1 rounded bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-60"
+              disabled={!isDirty || saving}
+              title="Save (Ctrl+S)"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
           )}
-          <div>
-            <span className="text-gray-500">Editable:</span>
-            <span className={`ml-2 font-medium ${isEditable ? 'text-green-600' : 'text-red-600'}`}>
-              {isEditable ? 'Yes' : 'No'}
-            </span>
-          </div>
         </div>
       </div>
 
       {/* File content */}
       <div className="flex-1 overflow-auto">
         {isEditable ? (
-          <div className="p-4">
-            {fileExtension === 'md' ? (
-              <div className="prose prose-sm max-w-none">
-                <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded border">
-                  <code>{content}</code>
-                </pre>
-              </div>
-            ) : (
-              <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded border h-full overflow-auto">
-                <code className={`language-${fileExtension}`}>{content}</code>
-              </pre>
-            )}
+          <div className="p-4 h-full">
+            <textarea
+              value={editorValue}
+              onChange={(e) => { setEditorValue(e.target.value); setIsDirty(e.target.value !== content); }}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
+              className="w-full h-[calc(100vh-240px)] font-mono text-sm bg-white border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              spellCheck={false}
+            />
           </div>
         ) : isPreviewable ? (
           <div className="p-4 text-center text-gray-500">

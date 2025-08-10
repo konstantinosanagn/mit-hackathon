@@ -1,16 +1,17 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, ConversationContext } from '@/types/app';
-import { sendAIChat, AIChatRequest } from '@/lib/aiApi';
+import {
+  sendAIChat,
+  AIChatRequest,
+  listChatSessions,
+  loadChatHistory,
+  clearChatHistory as apiClearChatHistory,
+  createChatSession as apiCreateChatSession,
+  deleteChatSession as apiDeleteChatSession,
+} from '@/lib/aiApi';
 
 export function useChat() {
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      content:
-        'Welcome! I can help you generate code with full context of your project files and structure. Just start chatting and I\'ll assist you with your development tasks!\n\nTip: I can help you create, modify, and manage files in your project workspace.',
-      type: 'system',
-      timestamp: new Date(),
-    },
-  ]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [aiChatInput, setAiChatInput] = useState('');
   const [aiEnabled] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -22,6 +23,11 @@ export function useChat() {
       currentProject: '',
       lastGeneratedCode: undefined,
     });
+
+  // Chat sessions state
+  const [sessions, setSessions] = useState<string[]>([]);
+  const [currentSession, setCurrentSession] = useState<string>('default');
+  const [isSessionsVisible, setIsSessionsVisible] = useState<boolean>(false);
 
   const chatMessagesRef = useRef<HTMLDivElement>(null);
 
@@ -49,16 +55,7 @@ export function useChat() {
     []
   );
 
-  // Memoized clearChatHistory function
-  const clearChatHistory = useCallback(() => {
-    setChatMessages([
-      {
-        content: 'Chat history cleared. How can I help you?',
-        type: 'system',
-        timestamp: new Date(),
-      },
-    ]);
-  }, []);
+  // (Deprecated) local clear function was replaced by server-backed clearChatHistory below
 
   // Memoized updateConversationContext function
   const updateConversationContext = useCallback(
@@ -72,7 +69,7 @@ export function useChat() {
   );
 
   // Send AI chat message to backend
-  const sendMessage = useCallback(async (message: string, project: string = '') => {
+  const sendMessage = useCallback(async (message: string, project: string = '', modelOverride?: 'kimi2' | 'gpt5' | 'claude') => {
     if (!message.trim() || isGenerating) return;
 
     const userMessage = message.trim();
@@ -101,8 +98,9 @@ export function useChat() {
 
       const chatRequest: AIChatRequest = {
         project: project || conversationContext.currentProject || 'default',
-        model: 'kimi2', // Default model, can be made configurable
-        messages: aiMessages
+        model: modelOverride || 'kimi2', // Default model, can be overridden
+        messages: aiMessages,
+        session: currentSession,
       };
 
       const response = await sendAIChat(chatRequest);
@@ -136,7 +134,80 @@ export function useChat() {
     } finally {
       setIsGenerating(false);
     }
-  }, [chatMessages, conversationContext.currentProject, isGenerating, addChatMessage]);
+  }, [chatMessages, conversationContext.currentProject, isGenerating, addChatMessage, currentSession]);
+
+  // Session actions
+  const refreshSessions = useCallback(async () => {
+    try {
+      const list = await listChatSessions();
+      setSessions(list);
+      if (!list.includes(currentSession)) {
+        // Ensure current session exists
+        setCurrentSession(list[0] || 'default');
+      }
+    } catch (e) {
+      console.warn('[useChat] Failed to list sessions', e);
+    }
+  }, [currentSession]);
+
+  const loadSession = useCallback(async (sessionName: string) => {
+    try {
+      const history = await loadChatHistory(sessionName, 50);
+      setCurrentSession(sessionName);
+      // Map backend history into ChatMessage list
+      const mapped = history.map(h => ({
+        content: h.content,
+        type: h.role === 'user' ? 'user' : h.role === 'system' ? 'system' : 'ai',
+        timestamp: new Date(h.timestamp ? Number(h.timestamp) : Date.now()),
+      }));
+      setChatMessages(mapped);
+    } catch (e) {
+      console.warn('[useChat] Failed to load session history', e);
+    }
+  }, []);
+
+  const createSession = useCallback(async (name: string) => {
+    await apiCreateChatSession(name);
+    await refreshSessions();
+    await loadSession(name);
+  }, [refreshSessions, loadSession]);
+
+  const deleteSession = useCallback(async (name: string) => {
+    console.debug('[useChat] Deleting session', name);
+    await apiDeleteChatSession(name);
+    console.debug('[useChat] Deleted session OK', name);
+    await refreshSessions();
+    if (name === currentSession) {
+      const next = sessions.find(s => s !== name) || 'default';
+      setCurrentSession(next);
+      await loadSession(next);
+    }
+  }, [currentSession, sessions, refreshSessions, loadSession]);
+
+  const clearChatHistory = useCallback(async () => {
+    try {
+      await apiClearChatHistory(currentSession);
+      setChatMessages([]);
+    } catch (e) {
+      console.warn('[useChat] Failed to clear history', e);
+    }
+  }, [currentSession]);
+
+  // Init: fetch sessions on mount
+  useEffect(() => {
+    refreshSessions();
+  }, [refreshSessions]);
+
+  // After sessions load, default to most recent (first) and load its history
+  useEffect(() => {
+    if (sessions.length > 0) {
+      const mostRecent = sessions[0];
+      if (currentSession !== mostRecent || chatMessages.length === 0) {
+        setCurrentSession(mostRecent);
+        loadSession(mostRecent);
+      }
+    }
+  }, [sessions, currentSession, chatMessages.length, loadSession]);
 
   // Memoized recent messages for context (performance optimization)
   const recentMessages = useMemo(() => {
@@ -161,9 +232,20 @@ export function useChat() {
     setConversationContext,
     chatMessagesRef,
     addChatMessage,
-    clearChatHistory,
+    // removed local clear; server-backed clear provided below
     updateConversationContext,
     sendMessage,
     recentMessages, // Expose memoized recent messages
+    // sessions
+    sessions,
+    currentSession,
+    setCurrentSession,
+    isSessionsVisible,
+    setIsSessionsVisible,
+    refreshSessions,
+    loadSession,
+    createSession,
+    deleteSession,
+    clearChatHistory, // server-backed
   };
 }
