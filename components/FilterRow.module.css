@@ -1,0 +1,11 @@
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem 2.5rem;
+  background: transparent;
+}
+
+.filter-row > * {
+  flex-shrink: 0;
+}
