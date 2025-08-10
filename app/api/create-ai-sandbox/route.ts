@@ -11,10 +11,82 @@ declare global {
   var sandboxState: SandboxState;
 }
 
+async function performHealthCheck(sandboxUrl: string): Promise<{ healthy: boolean; details: any }> {
+  try {
+    // Quick health check - try to fetch the sandbox URL
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    try {
+      const response = await fetch(`${sandboxUrl}`, {
+        method: 'HEAD',
+        signal: controller.signal,
+        cache: 'no-cache'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        return {
+          healthy: true,
+          details: {
+            statusCode: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries())
+          }
+        };
+      } else {
+        return {
+          healthy: false,
+          details: {
+            statusCode: response.status,
+            statusText: response.statusText,
+            error: 'Sandbox responded but with error status'
+          }
+        };
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw fetchError;
+    }
+  } catch (error) {
+    return {
+      healthy: false,
+      details: {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        type: error instanceof Error ? error.name : 'Unknown'
+      }
+    };
+  }
+}
+
 export async function POST() {
   let sandbox: any = null;
 
   try {
+    // First, check if we already have a healthy sandbox
+    if (global.activeSandbox && global.sandboxData) {
+      try {
+        console.log('[create-ai-sandbox] Checking existing sandbox health...');
+        const healthCheck = await performHealthCheck(global.sandboxData.url);
+        
+        if (healthCheck.healthy) {
+          console.log('[create-ai-sandbox] Existing sandbox is healthy, reusing it');
+          return NextResponse.json({
+            success: true,
+            sandboxId: global.sandboxData.sandboxId,
+            url: global.sandboxData.url,
+            reused: true,
+            message: 'Reused existing healthy sandbox'
+          });
+        } else {
+          console.log('[create-ai-sandbox] Existing sandbox is unhealthy, creating new one');
+        }
+      } catch (error) {
+        console.log('[create-ai-sandbox] Health check failed, creating new sandbox');
+      }
+    }
+
     console.log('[create-ai-sandbox] Creating base sandbox...');
     
     // Kill existing sandbox if any
@@ -233,13 +305,23 @@ print('\\nAll files created successfully!')
     await sandbox.runCode(`
 import subprocess
 import sys
+import os
 
-print('Installing npm packages...')
+print('Installing npm packages with optimized settings...')
+
+# Use faster npm settings
+os.environ['npm_config_cache'] = '/tmp/npm-cache'
+os.environ['npm_config_prefer_offline'] = 'true'
+os.environ['npm_config_fund'] = 'false'
+os.environ['npm_config_audit'] = 'false'
+
+# Install with optimized flags
 result = subprocess.run(
-    ['npm', 'install'],
+    ['npm', 'install', '--no-audit', '--no-fund', '--prefer-offline'],
     cwd='/home/user/app',
     capture_output=True,
-    text=True
+    text=True,
+    timeout=120  # 2 minute timeout
 )
 
 if result.returncode == 0:
@@ -260,11 +342,12 @@ os.chdir('/home/user/app')
 
 # Kill any existing Vite processes
 subprocess.run(['pkill', '-f', 'vite'], capture_output=True)
-time.sleep(1)
+time.sleep(0.5)  # Reduced wait time
 
-# Start Vite dev server
+# Start Vite dev server with optimized settings
 env = os.environ.copy()
 env['FORCE_COLOR'] = '0'
+env['NODE_ENV'] = 'development'
 
 process = subprocess.Popen(
     ['npm', 'run', 'dev'],
@@ -275,6 +358,10 @@ process = subprocess.Popen(
 
 print(f'✓ Vite dev server started with PID: {process.pid}')
 print('Waiting for server to be ready...')
+
+# Wait a bit for the server to start
+time.sleep(1)
+print('✓ Vite server should be ready')
     `);
     
     // Wait for Vite to be fully ready

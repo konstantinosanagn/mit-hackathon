@@ -1,0 +1,147 @@
+.createSandboxButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  height: 32px;
+  padding: 4px 12px;
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 40px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.createSandboxButton:hover:not(:disabled) {
+  background-color: #16a34a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+}
+
+.createSandboxButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+}
+
+.createSandboxButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4), 0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+.createSandboxButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4), 0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+.createSandboxButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.plusIcon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+
+.createSandboxButton:hover:not(:disabled) .plusIcon {
+  transform: scale(1.1);
+}
+
+.creating {
+  background-color: #f59e0b;
+  cursor: not-allowed;
+}
+
+.creating:hover {
+  background-color: #f59e0b;
+  transform: none;
+  box-shadow: none;
+}
+
+.loadingSpinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .createSandboxButton {
+    border: 2px solid currentColor;
+  }
+  
+  .createSandboxButton:focus,
+  .createSandboxButton:focus-visible {
+    border-color: #000;
+    box-shadow: 0 0 0 2px #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .createSandboxButton {
+    transition: none;
+  }
+  
+  .createSandboxButton:hover:not(:disabled) {
+    transform: none;
+  }
+  
+  .plusIcon {
+    transition: none;
+  }
+  
+  .createSandboxButton:hover:not(:disabled) .plusIcon {
+    transform: none;
+  }
+  
+  .loadingSpinner {
+    animation: none;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .createSandboxButton {
+    height: 28px;
+    padding: 3px 10px;
+    font-size: 13px;
+  }
+  
+  .plusIcon {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .loadingSpinner {
+    width: 14px;
+    height: 14px;
+  }
+}

@@ -16,7 +16,7 @@ export const appConfig = {
     vitePort: 5173,
     
     // Time to wait for Vite to be ready (in milliseconds)
-    viteStartupDelay: 7000,
+    viteStartupDelay: 3000, // Reduced from 7000ms to 3000ms for faster startup
     
     // Time to wait for CSS rebuild (in milliseconds)
     cssRebuildDelay: 2000,
@@ -94,10 +94,40 @@ export const appConfig = {
     enableDebugLogging: true,
     
     // Enable performance monitoring
-    enablePerformanceMonitoring: false,
+    enablePerformanceMonitoring: true,
     
     // Log API responses
-    logApiResponses: true,
+    logApiResponses: false, // Disabled for better performance
+    
+    // Enable React DevTools profiler
+    enableProfiler: false,
+  },
+  
+  // Performance Configuration
+  performance: {
+    // Debounce delay for search inputs (milliseconds)
+    searchDebounceDelay: 300,
+    
+    // Throttle delay for scroll events (milliseconds)
+    scrollThrottleDelay: 16, // ~60fps
+    
+    // Maximum number of chat messages to render
+    maxRenderedMessages: 50,
+    
+    // Enable virtual scrolling for large lists
+    enableVirtualScrolling: true,
+    
+    // Cache duration for API responses (milliseconds)
+    apiCacheDuration: 5 * 60 * 1000, // 5 minutes
+    
+    // Enable service worker for caching
+    enableServiceWorker: false,
+    
+    // Lazy load components
+    lazyLoadComponents: true,
+    
+    // Enable code splitting
+    enableCodeSplitting: true,
   },
   
   // Package Installation Configuration
