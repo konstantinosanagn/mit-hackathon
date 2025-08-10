@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { backendFetch } from '@/lib/backend';
 
 // Define more granular status types
 type SandboxStatusType =
@@ -99,7 +100,7 @@ export function useSandboxStatus() {
     }
 
     try {
-      const response = await fetch('/api/sandbox-status', {
+      const response = await backendFetch('/api/sandbox/status', {
         headers: {
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',

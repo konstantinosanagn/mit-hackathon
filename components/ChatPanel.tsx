@@ -17,6 +17,7 @@ interface ChatPanelProps {
   chatMessages: ChatMessageType[];
   aiChatInput: string;
   aiEnabled: boolean;
+  isGenerating: boolean;
   generationProgress: GenerationProgress;
   codeApplicationState: CodeApplicationState;
   chatMessagesRef: React.RefObject<HTMLDivElement | null>;
@@ -29,6 +30,7 @@ export default function ChatPanel({
   chatMessages,
   aiChatInput,
   aiEnabled,
+  isGenerating,
   generationProgress,
   codeApplicationState,
   chatMessagesRef,
@@ -103,7 +105,7 @@ export default function ChatPanel({
         onChange={onInputChange}
         onSend={onSendMessage}
         disabled={!aiEnabled}
-        isGenerating={generationProgress.isGenerating}
+        isGenerating={isGenerating}
       />
     </div>
   );

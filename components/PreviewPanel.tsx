@@ -4,6 +4,7 @@ import { ActiveTab, LoadingStage, GenerationProgress } from '@/types/app';
 import PreviewTabs from './preview/PreviewTabs';
 import GenerationView from './preview/GenerationView';
 import PreviewView from './preview/PreviewView';
+import FileExplorerPanel from './workspace/FileExplorerPanel';
 
 interface PreviewPanelProps {
   activeTab: ActiveTab;
@@ -19,6 +20,7 @@ interface PreviewPanelProps {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
   onTabChange: (tab: ActiveTab) => void;
   onRefreshSandbox: () => void;
+  project?: string;
 }
 
 export default function PreviewPanel({
@@ -35,9 +37,12 @@ export default function PreviewPanel({
   iframeRef,
   onTabChange,
   onRefreshSandbox,
+  project,
 }: PreviewPanelProps) {
   const renderMainContent = () => {
-    if (
+    if (activeTab === 'code' && project) {
+      return <FileExplorerPanel project={project} />;
+    } else if (
       activeTab === 'generation' &&
       (generationProgress.isGenerating || generationProgress.files.length > 0)
     ) {

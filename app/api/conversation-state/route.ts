@@ -35,7 +35,21 @@ export async function GET() {
 // POST: Reset or update conversation state
 export async function POST(request: NextRequest) {
   try {
-    const { action, data } = await request.json();
+    let action: string | undefined;
+    let data: any = undefined;
+
+    try {
+      const text = await request.text();
+      if (text) {
+        ({ action, data } = JSON.parse(text));
+      }
+    } catch {
+      // ignore parse errors – treat as no-op
+    }
+
+    if (!action) {
+      return NextResponse.json({ success: true, message: 'No action' });
+    }
 
     switch (action) {
       case 'reset':
@@ -62,13 +76,11 @@ export async function POST(request: NextRequest) {
       case 'clear-old':
         // Clear old conversation data but keep recent context
         if (!global.conversationState) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'No active conversation to clear',
-            },
-            { status: 400 }
-          );
+          return NextResponse.json({
+            success: true,
+            message: 'Nothing to clear',
+            state: null,
+          });
         }
 
         // Keep only recent data

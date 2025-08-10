@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { appConfig } from '@/config/app.config';
 
 // Custom hooks
@@ -11,31 +10,18 @@ import { useHomeScreen } from '@/hooks/useHomeScreen';
 import HomeScreen from '@/components/HomeScreen';
 
 export default function HomePage() {
-  const router = useRouter();
-
   const {
     showHomeScreen,
     homeScreenFading,
     homeUrlInput,
     homeContextInput,
-    selectedStyle,
     closeHomeScreen,
   } = useHomeScreen();
 
   // Local state
   const [aiModel, setAiModel] = useState(appConfig.ai.defaultModel);
 
-  const handleNewProjectClick = () => {
-    // Navigate to workspace with any URL parameters
-    const params = new URLSearchParams();
-    if (homeUrlInput) params.set('url', homeUrlInput);
-    if (homeContextInput) params.set('context', homeContextInput);
-    if (selectedStyle) params.set('style', selectedStyle);
-    params.set('model', aiModel);
-
-    const queryString = params.toString();
-    router.push(`/workspace${queryString ? `?${queryString}` : ''}`);
-  };
+  // Navigation now handled in HomeScreen modal implementation
 
   const handleModelChange = (model: string) => {
     setAiModel(model);
@@ -51,7 +37,7 @@ export default function HomePage() {
         homeContextInput={homeContextInput}
         aiModel={aiModel}
         onClose={closeHomeScreen}
-        onNewProjectClick={handleNewProjectClick}
+        // New project handled internally in HomeScreen
         onModelChange={handleModelChange}
       />
     </div>

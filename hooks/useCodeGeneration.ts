@@ -5,6 +5,8 @@ import {
   ConversationContext,
 } from '@/types/app';
 import { appConfig } from '@/config/app.config';
+import { SandboxData, CodeApplicationState } from '@/types/app';
+import { applyCode } from '@/lib/aiApi';
 
 export function useCodeGeneration() {
   const [promptInput, setPromptInput] = useState('');
@@ -61,15 +63,11 @@ export function useCodeGeneration() {
         }
 
         // Use streaming endpoint for real-time feedback
-        const response = await fetch('/api/apply-ai-code-stream', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            response: code,
-            isEdit: isEdit,
-            packages: pendingPackages,
-            sandboxId: sandboxData?.sandboxId,
-          }),
+        const response = await applyCode({
+          response: code,
+          isEdit: isEdit,
+          packages: pendingPackages,
+          sandboxId: sandboxData?.sandboxId,
         });
 
         if (!response.ok) {

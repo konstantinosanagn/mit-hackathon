@@ -8,11 +8,12 @@ export default function WorkspacePage() {
   return (
     <WorkspaceProvider>
       <WorkspaceController>
-        {({ headerProps, chatPanelProps, previewPanelProps }) => (
+        {({ headerProps, chatPanelProps, previewPanelProps, project }) => (
           <WorkspaceLayout
             headerProps={headerProps}
             chatPanelProps={chatPanelProps}
             previewPanelProps={previewPanelProps}
+            project={project}
           />
         )}
       </WorkspaceController>

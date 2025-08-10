@@ -18,6 +18,8 @@ interface WorkspaceContextType {
   aiChatInput: string;
   aiEnabled: boolean;
   conversationContext: any;
+  chatMessagesRef: React.RefObject<HTMLDivElement | null>;
+  isGenerating: boolean;
   
   // Code generation state
   promptInput: string;
@@ -38,6 +40,8 @@ interface WorkspaceContextType {
   // Actions
   setAiChatInput: (value: string) => void;
   addChatMessage: (content: string, type: any, metadata?: any) => void;
+  sendMessage: (message: string, project?: string) => Promise<void>;
+  updateConversationContext: (updates: any) => void;
   setGenerationProgress: (progress: any) => void;
   setPromptInput: (value: string) => void;
   createSandbox: (fromHomeScreen?: boolean) => Promise<any>;
@@ -95,6 +99,8 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     aiChatInput: chatData.aiChatInput,
     aiEnabled: chatData.aiEnabled,
     conversationContext: chatData.conversationContext,
+    chatMessagesRef: chatData.chatMessagesRef,
+    isGenerating: chatData.isGenerating,
     
     // Code generation state
     promptInput: codeGenerationData.promptInput,
@@ -115,6 +121,8 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     // Actions
     setAiChatInput: chatData.setAiChatInput,
     addChatMessage: chatData.addChatMessage,
+    sendMessage: chatData.sendMessage,
+    updateConversationContext: chatData.updateConversationContext,
     setGenerationProgress: codeGenerationData.setGenerationProgress,
     setPromptInput: codeGenerationData.setPromptInput,
     createSandbox: sandboxData.createSandbox,
