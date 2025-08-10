@@ -11,6 +11,7 @@ Chat with AI to build React apps instantly.
 ## Setup
 
 1. **Clone & Install**
+
 ```bash
 git clone https://github.com/mendableai/open-lovable.git
 cd open-lovable
@@ -18,6 +19,7 @@ npm install
 ```
 
 2. **Add `.env.local`**
+
 ```env
 # Required
 E2B_API_KEY=your_e2b_api_key  # Get from https://e2b.dev (Sandboxes)
@@ -30,11 +32,12 @@ GROQ_API_KEY=your_groq_api_key  # Get from https://console.groq.com (Fast infere
 ```
 
 3. **Run**
+
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)  
+Open [http://localhost:3000](http://localhost:3000)
 
 ## License
 

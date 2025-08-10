@@ -47,14 +47,14 @@ export default function Header({
   return (
     <div className="bg-card px-6 py-4 border-b border-border flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <div 
+        <div
           className="h-8 flex items-center text-[#36322F] font-semibold text-lg cursor-pointer hover:text-[#171310] transition-colors"
           onClick={() => router.push('/')}
           title="Go to Homepage"
         >
           Replicate Hub
         </div>
-        
+
         {/* Network Status Indicator */}
         {!networkStatus.isOnline && (
           <div className="flex items-center gap-2 px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs">
@@ -63,12 +63,12 @@ export default function Header({
           </div>
         )}
       </div>
-      
+
       <div className="flex items-center gap-2">
         {/* Model Selector */}
         <select
           value={aiModel}
-          onChange={(e) => handleModelChange(e.target.value)}
+          onChange={e => handleModelChange(e.target.value)}
           className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#36322F] focus:border-transparent"
           disabled={!networkStatus.isOnline}
         >
@@ -77,41 +77,67 @@ export default function Header({
           <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
           <option value="claude-3-haiku">Claude 3 Haiku</option>
         </select>
-        
-        <CreateSandboxButton 
+
+        <CreateSandboxButton
           onClick={onCreateSandbox}
           disabled={!networkStatus.isOnline || status.type === 'creating'}
           isCreating={status.type === 'creating'}
         />
-        
-        <Button 
+
+        <Button
           variant="code"
           onClick={onReapplyLastGeneration}
           size="sm"
           title="Re-apply last generation"
-          disabled={!conversationContext.lastGeneratedCode || !sandboxData || !networkStatus.isOnline || status.type !== 'active'}
+          disabled={
+            !conversationContext.lastGeneratedCode ||
+            !sandboxData ||
+            !networkStatus.isOnline ||
+            status.type !== 'active'
+          }
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
         </Button>
-        
-        <Button 
+
+        <Button
           variant="code"
           onClick={onDownloadZip}
-          disabled={!sandboxData || !networkStatus.isOnline || status.type !== 'active'}
+          disabled={
+            !sandboxData || !networkStatus.isOnline || status.type !== 'active'
+          }
           size="sm"
           title="Download your Vite app as ZIP"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+            />
           </svg>
         </Button>
-        
+
         {/* Status Bar Component */}
         <StatusBar status={status} onRefreshStatus={onRefreshStatus} />
       </div>
     </div>
   );
 }
-

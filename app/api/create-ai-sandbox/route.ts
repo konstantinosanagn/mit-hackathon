@@ -11,29 +11,31 @@ declare global {
   var sandboxState: SandboxState;
 }
 
-async function performHealthCheck(sandboxUrl: string): Promise<{ healthy: boolean; details: any }> {
+async function performHealthCheck(
+  sandboxUrl: string
+): Promise<{ healthy: boolean; details: any }> {
   try {
     // Quick health check - try to fetch the sandbox URL
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-    
+
     try {
       const response = await fetch(`${sandboxUrl}`, {
         method: 'HEAD',
         signal: controller.signal,
-        cache: 'no-cache'
+        cache: 'no-cache',
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         return {
           healthy: true,
           details: {
             statusCode: response.status,
             statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries())
-          }
+            headers: Object.fromEntries(response.headers.entries()),
+          },
         };
       } else {
         return {
@@ -41,21 +43,21 @@ async function performHealthCheck(sandboxUrl: string): Promise<{ healthy: boolea
           details: {
             statusCode: response.status,
             statusText: response.statusText,
-            error: 'Sandbox responded but with error status'
-          }
+            error: 'Sandbox responded but with error status',
+          },
         };
       }
     } catch (fetchError) {
       clearTimeout(timeoutId);
       throw fetchError;
     }
-  } catch (error) {
+  } catch {
     return {
       healthy: false,
       details: {
         error: error instanceof Error ? error.message : 'Unknown error',
-        type: error instanceof Error ? error.name : 'Unknown'
-      }
+        type: error instanceof Error ? error.name : 'Unknown',
+      },
     };
   }
 }
@@ -69,26 +71,32 @@ export async function POST() {
       try {
         console.log('[create-ai-sandbox] Checking existing sandbox health...');
         const healthCheck = await performHealthCheck(global.sandboxData.url);
-        
+
         if (healthCheck.healthy) {
-          console.log('[create-ai-sandbox] Existing sandbox is healthy, reusing it');
+          console.log(
+            '[create-ai-sandbox] Existing sandbox is healthy, reusing it'
+          );
           return NextResponse.json({
             success: true,
             sandboxId: global.sandboxData.sandboxId,
             url: global.sandboxData.url,
             reused: true,
-            message: 'Reused existing healthy sandbox'
+            message: 'Reused existing healthy sandbox',
           });
         } else {
-          console.log('[create-ai-sandbox] Existing sandbox is unhealthy, creating new one');
+          console.log(
+            '[create-ai-sandbox] Existing sandbox is unhealthy, creating new one'
+          );
         }
-      } catch (error) {
-        console.log('[create-ai-sandbox] Health check failed, creating new sandbox');
+      } catch {
+        console.log(
+          '[create-ai-sandbox] Health check failed, creating new sandbox'
+        );
       }
     }
 
     console.log('[create-ai-sandbox] Creating base sandbox...');
-    
+
     // Kill existing sandbox if any
     if (global.activeSandbox) {
       console.log('[create-ai-sandbox] Killing existing sandbox...');
@@ -99,7 +107,7 @@ export async function POST() {
       }
       global.activeSandbox = null;
     }
-    
+
     // Clear existing files tracking
     if (global.existingFiles) {
       global.existingFiles.clear();
@@ -108,21 +116,23 @@ export async function POST() {
     }
 
     // Create base sandbox - we'll set up Vite ourselves for full control
-    console.log(`[create-ai-sandbox] Creating base E2B sandbox with ${appConfig.e2b.timeoutMinutes} minute timeout...`);
-    sandbox = await Sandbox.create({ 
+    console.log(
+      `[create-ai-sandbox] Creating base E2B sandbox with ${appConfig.e2b.timeoutMinutes} minute timeout...`
+    );
+    sandbox = await Sandbox.create({
       apiKey: process.env.E2B_API_KEY,
-      timeoutMs: appConfig.e2b.timeoutMs
+      timeoutMs: appConfig.e2b.timeoutMs,
     });
-    
+
     const sandboxId = (sandbox as any).sandboxId || Date.now().toString();
     const host = (sandbox as any).getHost(appConfig.e2b.vitePort);
-    
+
     console.log(`[create-ai-sandbox] Sandbox created: ${sandboxId}`);
     console.log(`[create-ai-sandbox] Sandbox host: ${host}`);
 
     // Set up a basic Vite React app using Python to write files
     console.log('[create-ai-sandbox] Setting up Vite React app...');
-    
+
     // Write all files in a single Python script to avoid multiple executions
     const setupScript = `
 import os
@@ -299,7 +309,7 @@ print('\\nAll files created successfully!')
 
     // Execute the setup script
     await sandbox.runCode(setupScript);
-    
+
     // Install dependencies
     console.log('[create-ai-sandbox] Installing dependencies...');
     await sandbox.runCode(`
@@ -330,7 +340,7 @@ else:
     print(f'⚠ Warning: npm install had issues: {result.stderr}')
     # Continue anyway as it might still work
     `);
-    
+
     // Start Vite dev server
     console.log('[create-ai-sandbox] Starting Vite dev server...');
     await sandbox.runCode(`
@@ -363,10 +373,12 @@ print('Waiting for server to be ready...')
 time.sleep(1)
 print('✓ Vite server should be ready')
     `);
-    
+
     // Wait for Vite to be fully ready
-    await new Promise(resolve => setTimeout(resolve, appConfig.e2b.viteStartupDelay));
-    
+    await new Promise(resolve =>
+      setTimeout(resolve, appConfig.e2b.viteStartupDelay)
+    );
+
     // Force Tailwind CSS to rebuild by touching the CSS file
     await sandbox.runCode(`
 import os
@@ -387,29 +399,31 @@ print('✓ Tailwind CSS should be loaded')
     global.activeSandbox = sandbox;
     global.sandboxData = {
       sandboxId,
-      url: `https://${host}`
+      url: `https://${host}`,
     };
-    
+
     // Set extended timeout on the sandbox instance if method available
     if (typeof sandbox.setTimeout === 'function') {
       sandbox.setTimeout(appConfig.e2b.timeoutMs);
-      console.log(`[create-ai-sandbox] Set sandbox timeout to ${appConfig.e2b.timeoutMinutes} minutes`);
+      console.log(
+        `[create-ai-sandbox] Set sandbox timeout to ${appConfig.e2b.timeoutMinutes} minutes`
+      );
     }
-    
+
     // Initialize sandbox state
     global.sandboxState = {
       fileCache: {
         files: {},
         lastSync: Date.now(),
-        sandboxId
+        sandboxId,
       },
       sandbox,
       sandboxData: {
         sandboxId,
-        url: `https://${host}`
-      }
+        url: `https://${host}`,
+      },
     };
-    
+
     // Track initial files
     global.existingFiles.add('src/App.jsx');
     global.existingFiles.add('src/main.jsx');
@@ -419,19 +433,18 @@ print('✓ Tailwind CSS should be loaded')
     global.existingFiles.add('vite.config.js');
     global.existingFiles.add('tailwind.config.js');
     global.existingFiles.add('postcss.config.js');
-    
+
     console.log('[create-ai-sandbox] Sandbox ready at:', `https://${host}`);
-    
+
     return NextResponse.json({
       success: true,
       sandboxId,
       url: `https://${host}`,
-      message: 'Sandbox created and Vite React app initialized'
+      message: 'Sandbox created and Vite React app initialized',
     });
-
-  } catch (error) {
+  } catch {
     console.error('[create-ai-sandbox] Error:', error);
-    
+
     // Clean up on error
     if (sandbox) {
       try {
@@ -440,11 +453,12 @@ print('✓ Tailwind CSS should be loaded')
         console.error('Failed to close sandbox on error:', e);
       }
     }
-    
+
     return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : 'Failed to create sandbox',
-        details: error instanceof Error ? error.stack : undefined
+      {
+        error:
+          error instanceof Error ? error.message : 'Failed to create sandbox',
+        details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );

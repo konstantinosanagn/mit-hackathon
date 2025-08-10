@@ -1,22 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 declare global {
   var activeSandbox: any;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     if (!global.activeSandbox) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No active sandbox' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No active sandbox',
+        },
+        { status: 400 }
+      );
     }
-    
+
     console.log('[create-zip] Creating project zip...');
-    
+
     // Create zip file in sandbox
-    const result = await global.activeSandbox.runCode(`
+    await global.activeSandbox.runCode(`
 import zipfile
 import os
 import json
@@ -38,7 +41,7 @@ with zipfile.ZipFile('/tmp/project.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
 file_size = os.path.getsize('/tmp/project.zip')
 print(f" Created project.zip ({file_size} bytes)")
     `);
-    
+
     // Read the zip file and convert to base64
     const readResult = await global.activeSandbox.runCode(`
 import base64
@@ -48,24 +51,26 @@ with open('/tmp/project.zip', 'rb') as f:
     encoded = base64.b64encode(content).decode('utf-8')
     print(encoded)
     `);
-    
+
     const base64Content = readResult.logs.stdout.join('').trim();
-    
+
     // Create a data URL for download
     const dataUrl = `data:application/zip;base64,${base64Content}`;
-    
+
     return NextResponse.json({
       success: true,
       dataUrl,
       fileName: 'e2b-project.zip',
-      message: 'Zip file created successfully'
+      message: 'Zip file created successfully',
     });
-    
   } catch (error) {
     console.error('[create-zip] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: (error as Error).message 
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: (error as Error).message,
+      },
+      { status: 500 }
+    );
   }
 }

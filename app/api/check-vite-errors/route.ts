@@ -7,6 +7,6 @@ export async function GET() {
   return NextResponse.json({
     success: true,
     errors: [],
-    message: 'No Vite errors detected'
+    message: 'No Vite errors detected',
   });
 }

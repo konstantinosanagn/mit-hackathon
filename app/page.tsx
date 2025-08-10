@@ -12,37 +12,14 @@ import HomeScreen from '@/components/HomeScreen';
 
 export default function HomePage() {
   const router = useRouter();
-  
+
   const {
     showHomeScreen,
-    setShowHomeScreen,
     homeScreenFading,
-    setHomeScreenFading,
     homeUrlInput,
-    setHomeUrlInput,
     homeContextInput,
-    setHomeContextInput,
-    showStyleSelector,
-    setShowStyleSelector,
     selectedStyle,
-    setSelectedStyle,
-    showLoadingBackground,
-    setShowLoadingBackground,
-    urlScreenshot,
-    setUrlScreenshot,
-    isCapturingScreenshot,
-    setIsCapturingScreenshot,
-    screenshotError,
-    setScreenshotError,
-    isPreparingDesign,
-    setIsPreparingDesign,
-    targetUrl,
-    setTargetUrl,
-    loadingStage,
-    setLoadingStage,
-    captureUrlScreenshot,
     closeHomeScreen,
-    clearHomeScreenStates,
   } = useHomeScreen();
 
   // Local state
@@ -55,7 +32,7 @@ export default function HomePage() {
     if (homeContextInput) params.set('context', homeContextInput);
     if (selectedStyle) params.set('style', selectedStyle);
     params.set('model', aiModel);
-    
+
     const queryString = params.toString();
     router.push(`/workspace${queryString ? `?${queryString}` : ''}`);
   };

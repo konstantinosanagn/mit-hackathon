@@ -36,7 +36,12 @@ export interface GenerationProgress {
   thinkingText?: string;
   thinkingDuration?: number;
   currentFile?: { path: string; content: string; type: string };
-  files: Array<{ path: string; content: string; type: string; completed: boolean }>;
+  files: Array<{
+    path: string;
+    content: string;
+    type: string;
+    completed: boolean;
+  }>;
   lastProcessedPosition: number;
   isEdit?: boolean;
 }
@@ -54,7 +59,16 @@ export type LoadingStage = 'gathering' | 'planning' | 'generating' | null;
 export interface SandboxStatus {
   text: string;
   active: boolean;
-  type: 'disconnected' | 'connecting' | 'checking' | 'creating' | 'starting' | 'active' | 'unhealthy' | 'error' | 'timeout' | 'network-error';
+  type:
+    | 'disconnected'
+    | 'connecting'
+    | 'checking'
+    | 'creating'
+    | 'starting'
+    | 'active'
+    | 'unhealthy'
+    | 'error'
+    | 'timeout'
+    | 'network-error';
   lastCheck?: number;
 }
-

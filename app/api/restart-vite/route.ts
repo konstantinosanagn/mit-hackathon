@@ -7,14 +7,17 @@ declare global {
 export async function POST() {
   try {
     if (!global.activeSandbox) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No active sandbox' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No active sandbox',
+        },
+        { status: 400 }
+      );
     }
-    
+
     console.log('[restart-vite] Forcing Vite restart...');
-    
+
     // Kill existing Vite process and restart
     const result = await global.activeSandbox.runCode(`
 import subprocess
@@ -119,18 +122,20 @@ with open('/tmp/vite-process.pid', 'w') as f:
 time.sleep(5)
 print("Vite is ready")
     `);
-    
+
     return NextResponse.json({
       success: true,
       message: 'Vite restarted successfully',
-      output: result.output
+      output: result.output,
     });
-    
   } catch (error) {
     console.error('[restart-vite] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: (error as Error).message 
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: (error as Error).message,
+      },
+      { status: 500 }
+    );
   }
 }

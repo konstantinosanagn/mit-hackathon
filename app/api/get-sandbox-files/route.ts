@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { parseJavaScriptFile, buildComponentTree } from '@/lib/file-parser';
 import { FileManifest, FileInfo, RouteInfo } from '@/types/file-manifest';
-import type { SandboxState } from '@/types/sandbox';
+// import { SandboxState } from '@/types/sandbox'; // Unused import;
 
 declare global {
   var activeSandbox: any;
@@ -10,14 +10,17 @@ declare global {
 export async function GET() {
   try {
     if (!global.activeSandbox) {
-      return NextResponse.json({
-        success: false,
-        error: 'No active sandbox'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No active sandbox',
+        },
+        { status: 404 }
+      );
     }
 
     console.log('[get-sandbox-files] Fetching and analyzing file structure...');
-    
+
     // Get all React/JS/CSS files
     const result = await global.activeSandbox.runCode(`
 import os
@@ -70,7 +73,7 @@ print(json.dumps(result))
 
     const output = result.logs.stdout.join('');
     const parsedResult = JSON.parse(output);
-    
+
     // Build enhanced file manifest
     const fileManifest: FileManifest = {
       files: {},
@@ -80,11 +83,11 @@ print(json.dumps(result))
       styleFiles: [],
       timestamp: Date.now(),
     };
-    
+
     // Process each file
     for (const [relativePath, content] of Object.entries(parsedResult.files)) {
       const fullPath = `/home/user/app/${relativePath}`;
-      
+
       // Create base file info
       const fileInfo: FileInfo = {
         content: content as string,
@@ -93,38 +96,41 @@ print(json.dumps(result))
         relativePath,
         lastModified: Date.now(),
       };
-      
+
       // Parse JavaScript/JSX files
       if (relativePath.match(/\.(jsx?|tsx?)$/)) {
         const parseResult = parseJavaScriptFile(content as string, fullPath);
         Object.assign(fileInfo, parseResult);
-        
+
         // Identify entry point
-        if (relativePath === 'src/main.jsx' || relativePath === 'src/index.jsx') {
+        if (
+          relativePath === 'src/main.jsx' ||
+          relativePath === 'src/index.jsx'
+        ) {
           fileManifest.entryPoint = fullPath;
         }
-        
+
         // Identify App.jsx
         if (relativePath === 'src/App.jsx' || relativePath === 'App.jsx') {
           fileManifest.entryPoint = fileManifest.entryPoint || fullPath;
         }
       }
-      
+
       // Track style files
       if (relativePath.endsWith('.css')) {
         fileManifest.styleFiles.push(fullPath);
         fileInfo.type = 'style';
       }
-      
+
       fileManifest.files[fullPath] = fileInfo;
     }
-    
+
     // Build component tree
     fileManifest.componentTree = buildComponentTree(fileManifest.files);
-    
+
     // Extract routes (simplified - looks for Route components or page pattern)
     fileManifest.routes = extractRoutes(fileManifest.files);
-    
+
     // Update global file cache with manifest
     if (global.sandboxState?.fileCache) {
       global.sandboxState.fileCache.manifest = fileManifest;
@@ -137,47 +143,59 @@ print(json.dumps(result))
       fileCount: Object.keys(parsedResult.files).length,
       manifest: fileManifest,
     });
-
   } catch (error) {
     console.error('[get-sandbox-files] Error:', error);
-    return NextResponse.json({
-      success: false,
-      error: (error as Error).message
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: (error as Error).message,
+      },
+      { status: 500 }
+    );
   }
 }
 
 function extractRoutes(files: Record<string, FileInfo>): RouteInfo[] {
   const routes: RouteInfo[] = [];
-  
+
   // Look for React Router usage
   for (const [path, fileInfo] of Object.entries(files)) {
-    if (fileInfo.content.includes('<Route') || fileInfo.content.includes('createBrowserRouter')) {
+    if (
+      fileInfo.content.includes('<Route') ||
+      fileInfo.content.includes('createBrowserRouter')
+    ) {
       // Extract route definitions (simplified)
-      const routeMatches = fileInfo.content.matchAll(/path=["']([^"']+)["'].*(?:element|component)={([^}]+)}/g);
-      
+      const routeMatches = fileInfo.content.matchAll(
+        /path=["']([^"']+)["'].*(?:element|component)={([^}]+)}/g
+      );
+
       for (const match of routeMatches) {
-        const [, routePath, componentRef] = match;
+        const [, routePath] = match;
         routes.push({
           path: routePath,
           component: path,
         });
       }
     }
-    
+
     // Check for Next.js style pages
-    if (fileInfo.relativePath.startsWith('pages/') || fileInfo.relativePath.startsWith('src/pages/')) {
-      const routePath = '/' + fileInfo.relativePath
-        .replace(/^(src\/)?pages\//, '')
-        .replace(/\.(jsx?|tsx?)$/, '')
-        .replace(/index$/, '');
-        
+    if (
+      fileInfo.relativePath.startsWith('pages/') ||
+      fileInfo.relativePath.startsWith('src/pages/')
+    ) {
+      const routePath =
+        '/' +
+        fileInfo.relativePath
+          .replace(/^(src\/)?pages\//, '')
+          .replace(/\.(jsx?|tsx?)$/, '')
+          .replace(/index$/, '');
+
       routes.push({
         path: routePath,
         component: path,
       });
     }
   }
-  
+
   return routes;
 }

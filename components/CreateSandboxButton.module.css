@@ -34,12 +34,16 @@
 
 .createSandboxButton:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4), 0 0 0 4px rgba(34, 197, 94, 0.1);
+  box-shadow:
+    0 0 0 2px rgba(34, 197, 94, 0.4),
+    0 0 0 4px rgba(34, 197, 94, 0.1);
 }
 
 .createSandboxButton:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4), 0 0 0 4px rgba(34, 197, 94, 0.1);
+  box-shadow:
+    0 0 0 2px rgba(34, 197, 94, 0.4),
+    0 0 0 4px rgba(34, 197, 94, 0.1);
 }
 
 .createSandboxButton:disabled {
@@ -87,8 +91,12 @@
 }
 
 @keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 /* High contrast mode support */
@@ -96,7 +104,7 @@
   .createSandboxButton {
     border: 2px solid currentColor;
   }
-  
+
   .createSandboxButton:focus,
   .createSandboxButton:focus-visible {
     border-color: #000;
@@ -109,19 +117,19 @@
   .createSandboxButton {
     transition: none;
   }
-  
+
   .createSandboxButton:hover:not(:disabled) {
     transform: none;
   }
-  
+
   .plusIcon {
     transition: none;
   }
-  
+
   .createSandboxButton:hover:not(:disabled) .plusIcon {
     transform: none;
   }
-  
+
   .loadingSpinner {
     animation: none;
   }
@@ -134,12 +142,12 @@
     padding: 3px 10px;
     font-size: 13px;
   }
-  
+
   .plusIcon {
     width: 14px;
     height: 14px;
   }
-  
+
   .loadingSpinner {
     width: 14px;
     height: 14px;

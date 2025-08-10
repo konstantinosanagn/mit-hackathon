@@ -2,7 +2,15 @@
 
 export interface FileInfo {
   content: string;
-  type: 'component' | 'page' | 'style' | 'config' | 'utility' | 'layout' | 'hook' | 'context';
+  type:
+    | 'component'
+    | 'page'
+    | 'style'
+    | 'config'
+    | 'utility'
+    | 'layout'
+    | 'hook'
+    | 'context';
   exports?: string[]; // Named exports and default export
   imports?: ImportInfo[]; // Dependencies
   lastModified: number;
@@ -38,7 +46,7 @@ export interface ComponentTree {
     imports: string[]; // Components it imports
     importedBy: string[]; // Components that import it
     type: 'page' | 'layout' | 'component';
-  }
+  };
 }
 
 export interface FileManifest {
@@ -52,13 +60,13 @@ export interface FileManifest {
 
 // Edit classification types
 export enum EditType {
-  UPDATE_COMPONENT = 'UPDATE_COMPONENT',    // "update the header", "change button color"
-  ADD_FEATURE = 'ADD_FEATURE',              // "add a videos page", "create new component"
-  FIX_ISSUE = 'FIX_ISSUE',                 // "fix the styling", "resolve error"
-  REFACTOR = 'REFACTOR',                   // "reorganize", "clean up"
-  FULL_REBUILD = 'FULL_REBUILD',           // "start over", "recreate everything"
-  UPDATE_STYLE = 'UPDATE_STYLE',           // "change colors", "update theme"
-  ADD_DEPENDENCY = 'ADD_DEPENDENCY'        // "install package", "add library"
+  UPDATE_COMPONENT = 'UPDATE_COMPONENT', // "update the header", "change button color"
+  ADD_FEATURE = 'ADD_FEATURE', // "add a videos page", "create new component"
+  FIX_ISSUE = 'FIX_ISSUE', // "fix the styling", "resolve error"
+  REFACTOR = 'REFACTOR', // "reorganize", "clean up"
+  FULL_REBUILD = 'FULL_REBUILD', // "start over", "recreate everything"
+  UPDATE_STYLE = 'UPDATE_STYLE', // "change colors", "update theme"
+  ADD_DEPENDENCY = 'ADD_DEPENDENCY', // "install package", "add library"
 }
 
 export interface EditIntent {

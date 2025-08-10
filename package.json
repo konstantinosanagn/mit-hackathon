@@ -8,6 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test:integration": "node tests/e2b-integration.test.js",
     "test:api": "node tests/api-endpoints.test.js",
     "test:code": "node tests/code-execution.test.js",
@@ -52,6 +55,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.3",
+    "prettier": "^3.6.2",
     "typescript": "^5"
   }
 }

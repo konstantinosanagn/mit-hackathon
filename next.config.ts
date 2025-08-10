@@ -1,11 +1,15 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
-    optimizePackageImports: ['framer-motion', 'react-syntax-highlighter', 'lucide-react'],
+    optimizePackageImports: [
+      'framer-motion',
+      'react-syntax-highlighter',
+      'lucide-react',
+    ],
   },
-  
+
   // Turbopack configuration (moved from experimental.turbo)
   turbopack: {
     rules: {
@@ -15,13 +19,13 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  
+
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
   },
-  
+
   // Bundle analyzer (optional - uncomment to analyze bundle)
   // webpack: (config, { isServer }) => {
   //   if (!isServer) {
@@ -32,13 +36,13 @@ const nextConfig: NextConfig = {
   //   }
   //   return config;
   // },
-  
+
   // Compression
   compress: true,
-  
+
   // Power by header
   poweredByHeader: false,
-  
+
   // React strict mode for better development
   reactStrictMode: true,
 };

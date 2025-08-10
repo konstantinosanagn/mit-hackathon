@@ -15,7 +15,7 @@ class NetworkMonitor {
     isOnline: typeof window !== 'undefined' ? navigator.onLine : true,
     lastCheck: Date.now(),
     retryCount: 0,
-    maxRetries: 3
+    maxRetries: 3,
   };
 
   private listeners: ((status: NetworkStatus) => void)[] = [];
@@ -36,7 +36,7 @@ class NetworkMonitor {
 
   private setupEventListeners() {
     if (typeof window === 'undefined') return;
-    
+
     window.addEventListener('online', () => {
       this.status.isOnline = true;
       this.status.retryCount = 0;
@@ -70,46 +70,33 @@ class NetworkMonitor {
     if (typeof window === 'undefined') {
       return true;
     }
-    
-    let controller: AbortController | null = null;
+
+    const controller = new AbortController();
     let timeoutId: NodeJS.Timeout | null = null;
-    let isCompleted = false;
-    
+
     try {
-      controller = new AbortController();
       timeoutId = setTimeout(() => {
-        if (controller && !isCompleted) {
+        if (!controller.signal.aborted) {
           try {
-            if (!controller.signal.aborted) {
-              controller.abort();
-            }
+            controller.abort();
           } catch (error) {
             console.debug('[network] Abort error:', error);
           }
         }
       }, 5000);
-      
+
       const response = await fetch('/api/sandbox-status', {
         method: 'HEAD',
         signal: controller.signal,
-        cache: 'no-cache'
+        cache: 'no-cache',
       });
-      
-      isCompleted = true;
-      
-      // Clear timeout if request completed successfully
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      
+
       const isOnline = response.ok;
       this.status.isOnline = isOnline;
       this.notifyListeners();
-      
+
       return isOnline;
     } catch (error) {
-      isCompleted = true;
       // Only update status if it's not an abort error
       if (error instanceof Error && error.name !== 'AbortError') {
         this.status.isOnline = false;
@@ -117,13 +104,12 @@ class NetworkMonitor {
       }
       return false;
     } finally {
-      // Cleanup with better error handling
+      // Cleanup
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       try {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-        if (controller && !isCompleted && !controller.signal.aborted) {
+        if (!controller.signal.aborted) {
           controller.abort();
         }
       } catch (cleanupError) {
@@ -141,84 +127,83 @@ export async function fetchWithRetry(
   retryDelay: number = 1000
 ): Promise<Response> {
   let lastError: Error;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    let controller: AbortController | null = null;
+    const controller = new AbortController();
     let timeoutId: NodeJS.Timeout | null = null;
-    let isCompleted = false;
-    
+
     try {
-      controller = new AbortController();
-      
       // Only set timeout on client side
       if (typeof window !== 'undefined') {
         timeoutId = setTimeout(() => {
-          if (controller && !isCompleted) {
+          if (!controller.signal.aborted) {
             try {
-              if (!controller.signal.aborted) {
-                controller.abort();
-              }
+              controller.abort();
             } catch (error) {
               console.debug('[fetchWithRetry] Abort error:', error);
             }
           }
         }, 30000);
       }
-      
+
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          ...options.headers
-        }
+          Pragma: 'no-cache',
+          ...options.headers,
+        },
       });
-      
-      isCompleted = true;
-      
+
       // Clear timeout if request completed successfully
       if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
       }
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       return response;
     } catch (error: any) {
-      isCompleted = true;
       lastError = error;
-      
-      // Cleanup current attempt with better error handling
+
+      // Cleanup current attempt
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       try {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-        if (controller && !isCompleted && !controller.signal.aborted) {
+        if (!controller.signal.aborted) {
           controller.abort();
         }
       } catch (cleanupError) {
         console.debug('[fetchWithRetry] Cleanup error:', cleanupError);
       }
-      
+
       if (error.name === 'AbortError') {
-        console.warn(`Request to ${url} timed out (attempt ${attempt + 1}/${maxRetries + 1})`);
+        console.warn(
+          `Request to ${url} timed out (attempt ${attempt + 1}/${maxRetries + 1})`
+        );
       } else if (error.message && error.message.includes('Failed to fetch')) {
-        console.warn(`Network error for ${url} (attempt ${attempt + 1}/${maxRetries + 1})`);
+        console.warn(
+          `Network error for ${url} (attempt ${attempt + 1}/${maxRetries + 1})`
+        );
       } else {
-        console.warn(`Request to ${url} failed: ${error.message} (attempt ${attempt + 1}/${maxRetries + 1})`);
+        console.warn(
+          `Request to ${url} failed: ${error.message} (attempt ${attempt + 1}/${maxRetries + 1})`
+        );
       }
-      
+
       if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, attempt)));
+        await new Promise(resolve =>
+          setTimeout(resolve, retryDelay * Math.pow(2, attempt))
+        );
       }
     }
   }
-  
+
   throw lastError!;
 }
 
@@ -232,12 +217,14 @@ export async function apiCall<T>(
   if (typeof window !== 'undefined') {
     const networkMonitor = NetworkMonitor.getInstance();
     const status = networkMonitor.getStatus();
-    
+
     if (!status.isOnline) {
-      throw new Error('No internet connection. Please check your network and try again.');
+      throw new Error(
+        'No internet connection. Please check your network and try again.'
+      );
     }
   }
-  
+
   try {
     const response = await fetchWithRetry(
       endpoint,
@@ -245,13 +232,15 @@ export async function apiCall<T>(
       retryConfig?.maxRetries || 3,
       retryConfig?.retryDelay || 1000
     );
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(
+        data.error || `HTTP ${response.status}: ${response.statusText}`
+      );
     }
-    
+
     return data;
   } catch (error: any) {
     console.error(`API call to ${endpoint} failed:`, error);
@@ -268,10 +257,10 @@ export function useNetworkStatus() {
         isOnline: true,
         lastCheck: Date.now(),
         retryCount: 0,
-        maxRetries: 3
+        maxRetries: 3,
       };
     }
-    
+
     const monitor = NetworkMonitor.getInstance();
     return monitor.getStatus();
   });
@@ -279,7 +268,7 @@ export function useNetworkStatus() {
   React.useEffect(() => {
     // Only setup listener on client side
     if (typeof window === 'undefined') return;
-    
+
     const monitor = NetworkMonitor.getInstance();
     const unsubscribe = monitor.addListener(setStatus);
     return unsubscribe;
@@ -293,19 +282,19 @@ export function getErrorMessage(error: any): string {
   if (error.name === 'AbortError') {
     return 'Request was cancelled or timed out. Please try again.';
   }
-  
+
   if (error.message.includes('Failed to fetch')) {
     return 'Network error - please check your internet connection and try again.';
   }
-  
+
   if (error.message.includes('HTTP 500')) {
     return 'Server error - please try again later.';
   }
-  
+
   if (error.message.includes('HTTP 404')) {
     return 'Resource not found - please check the URL and try again.';
   }
-  
+
   return error.message || 'An unexpected error occurred. Please try again.';
 }
 

@@ -7,16 +7,20 @@ declare global {
 export async function GET() {
   try {
     if (!global.activeSandbox) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No active sandbox' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No active sandbox',
+        },
+        { status: 400 }
+      );
     }
-    
+
     console.log('[monitor-vite-logs] Checking Vite process logs...');
-    
+
     // Check both the error file and recent logs
-    const result = await global.activeSandbox.runCode(`
+    const result = await global.activeSandbox.runCode(
+      `
 import json
 import subprocess
 import re
@@ -98,21 +102,25 @@ for error in errors:
         unique_errors.append(error)
 
 print(json.dumps({"errors": unique_errors}))
-    `, { timeout: 5000 });
-    
+    `,
+      { timeout: 5000 }
+    );
+
     const data = JSON.parse(result.output || '{"errors": []}');
-    
+
     return NextResponse.json({
       success: true,
       hasErrors: data.errors.length > 0,
-      errors: data.errors
+      errors: data.errors,
     });
-    
   } catch (error) {
     console.error('[monitor-vite-logs] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: (error as Error).message 
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: (error as Error).message,
+      },
+      { status: 500 }
+    );
   }
 }

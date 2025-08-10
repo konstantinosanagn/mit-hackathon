@@ -1,19 +1,21 @@
 import React from 'react';
 import { useState } from 'react';
-import { 
-  FiFile, 
-  FiChevronRight, 
+import {
+  FiFile,
+  FiChevronRight,
   FiChevronDown,
-  BsFolderFill, 
+  BsFolderFill,
   BsFolder2Open,
-  SiJavascript, 
-  SiReact, 
-  SiCss3, 
-  SiJson 
+  SiJavascript,
+  SiReact,
+  SiCss3,
+  SiJson,
 } from '../lib/icons';
 
 export function useFileExplorer() {
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['app', 'src', 'src/components']));
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    new Set(['app', 'src', 'src/components'])
+  );
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const toggleFolder = (folderPath: string) => {
@@ -33,7 +35,7 @@ export function useFileExplorer() {
 
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
-    
+
     if (ext === 'jsx' || ext === 'js') {
       return <SiJavascript className="w-4 h-4 text-yellow-500" />;
     } else if (ext === 'tsx' || ext === 'ts') {

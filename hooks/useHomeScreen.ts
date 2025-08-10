@@ -27,7 +27,7 @@ export function useHomeScreen() {
         }, 500);
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showHomeScreen]);
@@ -39,9 +39,9 @@ export function useHomeScreen() {
       const response = await fetch('/api/scrape-screenshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url }),
       });
-      
+
       const data = await response.json();
       if (data.success && data.screenshot) {
         setUrlScreenshot(data.screenshot);
@@ -113,6 +113,3 @@ export function useHomeScreen() {
     clearHomeScreenStates,
   };
 }
-
-
-
