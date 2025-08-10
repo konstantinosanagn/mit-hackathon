@@ -35,34 +35,24 @@ export default function WorkspaceLayout({
         {/* Chat Panel */}
         <ChatPanel {...chatPanelProps} />
 
-        {/* Preview Panel */}
-        <PreviewPanel {...previewPanelProps} project={project} />
+        {/* Right side: editor/preview with docked terminal */}
+        <div className="flex-1 relative overflow-hidden" style={{ paddingBottom: '20rem' }}>
+          <PreviewPanel {...previewPanelProps} project={project} />
+          <Terminal 
+            isOpen={true}
+            onToggle={toggleTerminal}
+            onMinimize={closeTerminal}
+            onMaximize={closeTerminal}
+            sandboxStatus={sandboxStatus}
+            project={project}
+            layoutMode="dock-bottom"
+          />
+        </div>
       </div>
       
       {children}
 
-      {/* Terminal */}
-      <Terminal 
-        isOpen={isTerminalOpen}
-        onToggle={toggleTerminal}
-        onMinimize={closeTerminal}
-        onMaximize={closeTerminal}
-        sandboxStatus={sandboxStatus}
-        project={project}
-      />
-
-      {/* Terminal Toggle Button - Fixed position */}
-      <button
-        onClick={toggleTerminal}
-        className={`fixed bottom-4 right-4 z-50 p-3 rounded-full shadow-lg transition-all duration-200 ${
-          isTerminalOpen 
-            ? 'bg-red-500 hover:bg-red-600 text-white' 
-            : 'bg-green-500 hover:bg-green-600 text-white'
-        }`}
-        title={isTerminalOpen ? 'Close Terminal' : 'Open Terminal'}
-      >
-        {isTerminalOpen ? '✕' : '💻'}
-      </button>
+      {/* Docked terminal replaces global terminal/toggle */}
     </div>
   );
 }

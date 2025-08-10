@@ -17,9 +17,10 @@ interface TerminalProps {
   onMaximize?: () => void;
   sandboxStatus?: any; // Add sandbox status prop
   project?: string;
+  layoutMode?: 'dock' | 'overlay' | 'dock-bottom';
 }
 
-export default function Terminal({ isOpen, onToggle, onMinimize, onMaximize, sandboxStatus, project }: TerminalProps) {
+export default function Terminal({ isOpen, onToggle, onMinimize, onMaximize, sandboxStatus, project, layoutMode = 'overlay' }: TerminalProps) {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [currentCommand, setCurrentCommand] = useState('');
@@ -269,10 +270,143 @@ For other commands, they will be executed in your sandbox environment.`,
     });
   };
 
-  if (!isOpen) return null;
+  // In dock modes we force visible
+  if (!isOpen && layoutMode === 'overlay') return null;
 
+  // Resizable height for bottom dock
+  const [dockHeight, setDockHeight] = useState<number>(() => {
+    if (typeof window === 'undefined') return 320;
+    const stored = window.localStorage.getItem('terminalDockHeight');
+    const val = stored ? parseInt(stored, 10) : 320;
+    return isNaN(val) ? 320 : Math.min(Math.max(val, 200), 600);
+  });
+
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startY = e.clientY;
+    const startHeight = dockHeight;
+    const onMove = (evt: MouseEvent) => {
+      const dy = startY - evt.clientY; // dragging up increases height
+      const next = Math.min(Math.max(startHeight + dy, 200), 800);
+      setDockHeight(next);
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      try {
+        window.localStorage.setItem('terminalDockHeight', String(dockHeight));
+      } catch {}
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  // Dock-bottom renders spacer + absolute terminal at bottom of the right pane
+  if (layoutMode === 'dock-bottom') {
+    return (
+      <>
+        <div style={{ height: dockHeight }} />
+        <div className={`absolute left-0 right-0 bottom-0 bg-gray-900 border-t border-gray-700 shadow-2xl z-40`} style={{ height: dockHeight }}>
+          {/* Resize handle */}
+          <div
+            onMouseDown={startResize}
+            className="h-2 cursor-row-resize bg-gray-800 hover:bg-gray-700 active:bg-gray-600"
+            title="Drag to resize"
+          />
+          {/* Terminal Header */}
+          <div className="flex items-center justify-between bg-gray-800 px-4 py-2 border-b border-gray-700">
+            <div className="flex items-center space-x-2">
+              <TerminalIcon className="w-4 h-4 text-green-400" />
+              <span className="text-sm font-medium text-gray-200">Terminal</span>
+              <span className="text-xs text-gray-400">({workingDirectory})</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={onMinimize}
+                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded transition-colors"
+                title="Minimize"
+              >
+                <Minimize2 className="w-3 h-3" />
+              </button>
+              <button
+                onClick={onMaximize}
+                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded transition-colors"
+                title="Maximize"
+              >
+                <Maximize2 className="w-3 h-3" />
+              </button>
+              <button
+                onClick={onToggle}
+                className="p-1 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors"
+                title="Close"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+          {/* Terminal Output */}
+          <div 
+            ref={outputRef}
+            className="flex-1 overflow-auto p-4 font-mono text-sm text-gray-200"
+            style={{ height: `calc(${dockHeight}px - 2rem - 2px - 0.5rem)` }}
+          >
+            {outputs.map((output, index) => (
+              <div key={index} className="mb-2">
+                <div className="flex items-start space-x-2">
+                  <span className="text-gray-500 text-xs mt-1 flex-shrink-0">
+                    [{formatTimestamp(output.timestamp)}]
+                  </span>
+                  <div className={`flex-1 ${output.type === 'input' ? 'text-green-400' : output.type === 'error' ? 'text-red-400' : 'text-gray-200'}`}>
+                    {output.content.split('\n').map((line, lineIndex) => (
+                      <div key={lineIndex} className="whitespace-pre-wrap">
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {/* Command input line */}
+            <div className="flex items-center space-x-2 mt-2">
+              <span className="text-gray-500 text-xs flex-shrink-0">
+                [{formatTimestamp(new Date())}]
+              </span>
+              <ChevronRight className="w-4 h-4 text-green-400 flex-shrink-0" />
+              <form onSubmit={handleSubmit} className="flex-1">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={currentCommand}
+                  onChange={(e) => setCurrentCommand(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isExecuting}
+                  placeholder={isExecuting ? "Executing command..." : "Enter command..."}
+                  className="flex-1 bg-transparent text-gray-200 placeholder-gray-500 outline-none border-none"
+                />
+              </form>
+              {isExecuting && (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-400"></div>
+              )}
+            </div>
+          </div>
+          {/* Footer */}
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-t border-gray-700">
+            <div className="flex items-center space-x-4 text-xs text-gray-400">
+              <button onClick={clearTerminal} className="hover:text-gray-200 transition-colors">Clear</button>
+              <span>History: {commandHistory.length} commands</span>
+              <span>Output: {outputs.length} lines</span>
+            </div>
+            <div className="text-xs text-gray-500">Press ↑↓ for command history • Tab for auto-complete</div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Default overlay behavior (legacy)
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-80 bg-gray-900 border-t border-gray-700 shadow-2xl z-50">
+    <div className={`${layoutMode === 'dock' ? 'absolute right-0 bottom-0 left-auto' : 'fixed left-0 right-0'} h-80 bg-gray-900 border-t border-gray-700 shadow-2xl z-40`} style={layoutMode === 'dock' ? { width: '50%', minWidth: 420 } : { bottom: 0 }}>
       {/* Terminal Header */}
       <div className="flex items-center justify-between bg-gray-800 px-4 py-2 border-b border-gray-700">
         <div className="flex items-center space-x-2">
