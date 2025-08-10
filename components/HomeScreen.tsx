@@ -13,10 +13,10 @@ interface HomeScreenProps {
   homeScreenFading: boolean;
   homeUrlInput: string;
   homeContextInput: string;
-  aiModel: string;
   onClose: () => void;
   onNewProjectClick?: () => void;
-  onModelChange: (model: string) => void;
+  aiModel?: string;
+  onModelChange?: (model: string) => void;
 }
 
 export default function HomeScreen({
@@ -184,29 +184,7 @@ export default function HomeScreen({
             </div>
           </div>
 
-          {/* Model Selector */}
-          <div className="mt-6 flex items-center justify-center animate-[fadeIn_1s_ease-out]">
-            <select
-              value={aiModel}
-              onChange={e => {
-                const newModel = e.target.value;
-                onModelChange(newModel);
-                const params = new URLSearchParams(searchParams);
-                params.set('model', newModel);
-                router.push(`/?${params.toString()}`);
-              }}
-              className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#36322F] focus:border-transparent"
-              style={{
-                boxShadow: '0 0 0 1px #e3e1de66, 0 1px 2px #5f4a2e14',
-              }}
-            >
-              {appConfig.ai.availableModels.map(model => (
-                <option key={model} value={model}>
-                  {appConfig.ai.modelDisplayNames[model] || model}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Model Selector removed on homepage; user selects model in workspace */}
         </div>
       </div>
 

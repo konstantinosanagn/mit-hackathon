@@ -18,7 +18,25 @@ export default function ProjectsList({ onProjectOpened }: ProjectsListProps) {
     const fetchProjects = async () => {
       try {
         const result = await listProjects();
-        setProjects(Array.isArray(result) ? result : []);
+        if (Array.isArray(result)) {
+          // Keep only the latest two test projects and filter the rest
+          // Definition: names matching /^test\d+/ or starting with 'test'
+          const tests = result.filter(n => /^test\d+/i.test(n) || n.toLowerCase().startsWith('test'));
+          const nonTests = result.filter(n => !(/^test\d+/i.test(n) || n.toLowerCase().startsWith('test')));
+
+          // Sort test projects by natural numeric index descending
+          const sortedTests = [...tests].sort((a, b) => {
+            const na = parseInt(a.replace(/\D+/g, ''), 10) || 0;
+            const nb = parseInt(b.replace(/\D+/g, ''), 10) || 0;
+            return nb - na;
+          });
+
+          const visibleTests = sortedTests.slice(0, 2); // keep only latest two
+          const finalList = [...nonTests, ...visibleTests];
+          setProjects(finalList);
+        } else {
+          setProjects([]);
+        }
       } catch (e: any) {
         setError(e.message || 'Failed to load projects');
       }
@@ -41,6 +59,12 @@ export default function ProjectsList({ onProjectOpened }: ProjectsListProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = async (project: string) => {
+    // Optional: if backend provides delete endpoint.
+    // For now we simply hide in UI (already filtered). Hook for future integration.
+    setProjects(prev => prev.filter(p => p !== project));
   };
 
   if (error) {

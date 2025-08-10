@@ -319,18 +319,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Vercel** - For hosting and deployment
 - **The AI Community** - For inspiration and feedback
 
-## 📞 Support
-
-- **Documentation**: [docs.replicatehub.com](https://docs.replicatehub.com)
-- **Discord**: [Join our community](https://discord.gg/replicatehub)
-- **Email**: support@replicatehub.com
-- **Issues**: [GitHub Issues](https://github.com/mendableai/open-lovable/issues)
-
 ---
 
 <div align="center">
 
-**Built with ❤️ by the Replicate Hub Team**
+**Built with ❤️ by the Coralle for MIT Sloan Hack-Nation**
 
 *Empowering the future of AI development*
 
